@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Party Jo</title>
+    <style>
+        :root { --bg: #111; --surface: #222; --accent: #e94560; --gold: #f1c40f; --success: #4caf50; }
+        * { touch-action: manipulation; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: white; text-align: center; margin: 0; padding: 10px; overflow-x: hidden; user-select: none; }
+        .hidden { display: none !important; }
+        input, button, select { padding: 12px; font-size: 16px; border-radius: 8px; margin: 5px; outline: none; font-family: inherit; }
+        input { background: var(--surface); color: white; border: 2px solid #444; width: 80%; max-width: 250px; }
+        button { background: var(--accent); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; width: 80%; max-width: 250px; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .area { background: var(--surface); padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .flex-center { display: flex; justify-content: center; gap: 20px; align-items: center; flex-wrap: wrap; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; margin: 10px auto; }
+        #my-grid { max-width: 420px; gap: 8px; }
+        .card-container { perspective: 1000px; width: 100%; aspect-ratio: 2/3; cursor: pointer; position: relative; }
+        .card-inner { position: absolute; width: 100%; height: 100%; transition: transform 0.4s; transform-style: preserve-3d; }
+        .card-container.up .card-inner { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'Times New Roman', serif; font-size: 36px; font-weight: bold; border: 2px solid white; }
+        .card-back { background: linear-gradient(135deg, #FF007F, #FFFF00, #00FFFF); background-size: 200% 200%; animation: gradientShift 3s ease infinite; color: white; font-size: 12px; font-family: sans-serif; overflow: hidden; }
+        .card-back::after { content: "PARTY JO"; position: absolute; transform: rotate(-45deg); font-weight: 900; font-size: 1em; white-space: nowrap; }
+        .opp-grid .card-face { font-size: 14px; border-width: 1px; }
+        .opp-grid .card-back { font-size: 8px; }
+        .opp-grid .card-back::after { font-size: 6px; }
+        .card-front { transform: rotateY(180deg); background: white; color: black; background-image: radial-gradient(rgba(0,0,0,0.1) 1px, transparent 1px); background-size: 8px 8px; }
+        .val-neg2 { background-color: #1a237e; color: white; }
+        .val-neg1 { background-color: #3f51b5; color: white; }
+        .val-0 { background-color: #03a9f4; color: white; }
+        .val-low { background-color: #4caf50; color: white; }
+        .val-mid { background-color: #ffeb3b; color: black; }
+        .val-high { background-color: #e91e63; color: white; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 200; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .modal-content { background: var(--surface); padding: 25px; border-radius: 12px; text-align: left; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+        .modal-content h2 { color: var(--gold); margin-top: 0; margin-bottom: 20px; }
+        .modal-content label { display: block; margin-bottom: 8px; color: #aaa; font-weight: bold; }
+        .modal-content input { width: 100%; max-width: 100%; box-sizing: border-box; margin-bottom: 20px; }
+        .announcement { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: var(--gold); color: black; padding: 15px 20px; border-radius: 8px; z-index: 1000; animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { transform: translateX(-50%) translateY(-30px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        .pause-banner { background: #c0392b; color: white; padding: 12px; border-radius: 8px; margin: 10px 0; border-left: 4px solid var(--accent); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .pause-banner button { background: var(--success); color: white; width: auto; padding: 6px 12px; margin: 0; font-size: 12px; }
+        .room-item { background: #333; padding: 12px; margin: 8px 0; border-radius: 8px; cursor: pointer; border-left: 4px solid var(--gold); text-align: left; }
+        .player-item { background: #333; padding: 12px; margin: 8px 0; border-radius: 8px; cursor: pointer; border-left: 4px solid var(--gold); display: flex; justify-content: space-between; align-items: center; }
+        .status-badge { font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 4px; }
+        .status-active { background: var(--success); color: white; }
+        .status-inactive { background: var(--accent); color: white; }
+        .status-kicked { background: #c0392b; color: white; }
+        #room { position: relative; margin: 5vh auto; width: 90%; max-width: 400px; }
+        .opp-area { width: 48%; min-width: 140px; max-width: 240px; padding: 10px; }
+        .opp-grid { max-width: 220px; gap: 4px; }
+        .back-btn { position: fixed; top: 10px; left: 10px; background: var(--surface); color: white; border: 2px solid var(--gold); border-radius: 8px; padding: 8px 12px; text-decoration: none; font-weight: bold; z-index: 100; }
+    </style>
+</head>
+<body>
+<a href="/" class="back-btn">← Hub</a>
+
+<div id="lobby">
+    <h1 style="color: var(--gold); font-size: 44px; margin-top: 5vh;">🎮 PARTY JO 🎮</h1>
+    <p style="color: #aaa; margin: 10px 0;">Choose your emoji</p>
+    <div class="emoji-picker" id="emoji-picker" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 15px 0;"></div>
+    <input type="text" id="name" placeholder="Your Name" autocomplete="off" /><br>
+    <button onclick="createRoom()" style="background: var(--success);">Create New Room</button>
+    <hr style="border-color:#333; width:200px; margin:20px auto;">
+    <input type="text" id="join-code" placeholder="4-Digit Code" autocomplete="off" /><br>
+    <button onclick="joinRoom()" style="background: #03a9f4;">Join Room</button>
+    <hr style="border-color:#333; width:200px; margin:20px auto;">
+    <button onclick="showAvailableRooms()" style="background: #f39c12;">Rejoin Active Room</button>
+</div>
+
+<div id="room" class="hidden">
+    <h2 id="room-name"></h2>
+    <p style="color:#aaa; font-size:12px;">Share this code!</p>
+    <div id="player-list" style="margin: 20px 0;"></div>
+    <button onclick="openSettings()" style="background: #888; width: auto; padding: 8px 16px; margin-bottom: 10px;">⚙️ Settings</button>
+    <button id="start-btn" onclick="startGame()">Start Game</button>
+</div>
+
+<div id="settings-modal" class="modal hidden">
+    <div class="modal-content">
+        <h2 style="color: var(--gold);">⚙️ Game Settings</h2>
+        <div><label>Room Name</label><input type="text" id="setting-room-name" maxlength="30" placeholder="Party Jo" /></div>
+        <div><label>Target Score</label><input type="number" id="setting-target-score" min="20" max="500" value="100" /></div>
+        <div><label>Disconnect Buffer (seconds)</label><input type="number" id="setting-buffer-time" min="30" max="600" value="120" /></div>
+        <div><label>Rejoin Penalty (points)</label><input type="number" id="setting-penalty" min="0" max="100" value="25" /></div>
+        <div style="display: flex; gap: 10px; margin-top: 25px;">
+            <button onclick="closeSettings()" style="flex:1; background:#444; width:auto;">Cancel</button>
+            <button onclick="saveSettings()" style="flex:1; background:var(--accent); width:auto;">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<div id="available-rooms-modal" class="modal hidden">
+    <div class="modal-content">
+        <h2 style="color: var(--gold);">Active Rooms</h2>
+        <p style="color:#aaa; font-size:13px;">Click a room to see players</p>
+        <div id="rooms-list"></div>
+        <button onclick="closeModal('available-rooms-modal')" style="width:100%; margin-top:15px; background:#444;">Close</button>
+    </div>
+</div>
+
+<div id="select-player-modal" class="modal hidden">
+    <div class="modal-content">
+        <h2 id="room-select-title" style="color: var(--gold);"></h2>
+        <p style="color:#aaa; font-size:13px;">Click your inactive name to rejoin</p>
+        <div id="players-list"></div>
+        <button onclick="closeModal('select-player-modal'); showAvailableRooms();" style="width:100%; margin-top:15px; background:#444;">Back</button>
+    </div>
+</div>
+
+<div id="game" class="hidden">
+    <div id="announcements"></div>
+    <div id="pause-alert"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin:5px 0;">
+        <h3 id="turn-indicator" style="margin:0; flex:1; font-size: 18px;"></h3>
+        <span id="room-code-display" style="font-family:monospace; color:var(--gold); font-size: 12px;"></span>
+    </div>
+    <div class="flex-center" style="align-items:flex-start; flex-wrap:wrap; margin-bottom:15px;">
+        <div class="area" style="flex:1; min-width:150px; padding:10px;">
+            <h4 style="margin:0 0 10px;">📊 Standings</h4>
+            <table id="scoreboard-table" style="width:100%; border-collapse:collapse; font-size:14px;"><thead><tr><th style="color:var(--gold);">Player</th><th style="color:var(--gold);">Score</th></tr></thead><tbody id="scoreboard-body"></tbody></table>
+        </div>
+        <div class="area flex-center" style="flex:2; min-width:220px; padding:15px;">
+            <div>
+                <div style="font-size:10px; color:#aaa; margin-bottom:5px;">DECK</div>
+                <div class="card-container" style="width:70px;" onclick="action('draw_deck')"><div class="card-inner"><div class="card-face card-back"></div></div></div>
+                <div id="deck-count" style="font-size:11px; color:#aaa; margin-top:5px;"></div>
+            </div>
+            <div><div style="font-size:10px; color:#aaa; margin-bottom:5px;">DISCARD</div><div class="card-container up" style="width:70px;" onclick="action('draw_discard')" id="discard-wrapper"></div></div>
+        </div>
+    </div>
+    <div id="action-area" class="area hidden" style="border:2px solid var(--accent); padding:15px; margin-bottom:15px;">
+        <div style="display:flex; justify-content:center; align-items:center; flex-wrap:wrap;">
+            <h4 style="margin:0; margin-right:10px;">You Drew:</h4>
+            <span id="drawn-card-val" style="display:inline-flex; padding:8px 16px; border-radius:6px; border:2px solid white; font-size:28px; font-weight:bold;"></span>
+        </div>
+        <button id="discard-btn" onclick="action('discard_drawn')" style="margin-top:15px; width:auto; padding:10px 20px;">Discard & Flip</button>
+    </div>
+    <div id="my-area" class="area" style="padding:15px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 style="margin:0; font-size:18px;">📋 My Board</h3>
+            <div id="my-stats" style="font-size:14px; color:#aaa;"></div>
+        </div>
+        <div id="my-grid" class="grid"></div>
+    </div>
+    <div id="others-area" style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px;"></div>
+</div>
+
+<div id="game-over" class="hidden">
+    <h1 id="go-title" style="font-size:36px; margin-bottom:10px;"></h1>
+    <div id="kicked-history"></div>
+    <div id="scores-container" style="max-height:50vh; overflow-y:auto; margin-bottom:20px;"></div>
+    <div id="go-actions" style="margin-top:20px;"></div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io('/partyjo');
+    let currentCode = null;
+    const EMOJI_LIST = ['🎲', '🃏', '🎯', '🎪', '🥳', '🎉', '🎊', '🎈', '🎁', '✨', '🌟', '💥', '🔥', '🍀', '🎮', '👾'];
+    let selectedEmoji = EMOJI_LIST[Math.floor(Math.random() * EMOJI_LIST.length)];
+
+    function buildEmojiPicker() {
+        const c = document.getElementById('emoji-picker');
+        c.innerHTML = '';
+        EMOJI_LIST.forEach(e => {
+            const s = document.createElement('span');
+            s.textContent = e;
+            s.style.fontSize = '24px'; s.style.cursor = 'pointer'; s.style.padding = '5px';
+            s.style.borderRadius = '8px';
+            s.style.border = e === selectedEmoji ? '2px solid var(--gold)' : '2px solid transparent';
+            s.style.backgroundColor = e === selectedEmoji ? '#333' : 'transparent';
+            s.onclick = () => { selectedEmoji = e; buildEmojiPicker(); };
+            c.appendChild(s);
+        });
+    }
+    buildEmojiPicker();
+
+    function createRoom() {
+        const name = document.getElementById('name').value.trim();
+        if (!name) return showError('Enter your name');
+        socket.emit('create_room', { name, emoji: selectedEmoji });
+    }
+    function joinRoom() {
+        const name = document.getElementById('name').value.trim();
+        const code = document.getElementById('join-code').value.trim();
+        if (!name) { showError('Enter your name'); return; }
+        if (!code || code.length !== 4 || isNaN(code)) { showError('Enter a valid 4-digit code'); return; }
+        socket.emit('join_room', { code, name, emoji: selectedEmoji });
+    }
+    function showAvailableRooms() { socket.emit('get_available_rooms'); }
+    function selectRoom(code) { socket.emit('get_room_players', code); }
+    function selectPlayer(playerId, name, code) { socket.emit('join_room', { code, name }); }
+    function openSettings() { document.getElementById('settings-modal').classList.remove('hidden'); }
+    function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    function startGame() { socket.emit('start_game', currentCode); }
+    function action(t, i=null) { socket.emit('action', { code: currentCode, type: t, index: i }); }
+
+    function saveSettings() {
+        socket.emit('update_settings', {
+            code: currentCode,
+            settings: {
+                roomName: document.getElementById('setting-room-name').value || 'Party Jo',
+                targetScore: parseInt(document.getElementById('setting-target-score').value) || 100,
+                bufferTimeSec: parseInt(document.getElementById('setting-buffer-time').value) || 120,
+                rejoinPenalty: parseInt(document.getElementById('setting-penalty').value) || 25
+            }
+        });
+        closeSettings();
+    }
+
+    function showError(m) {
+        const e = document.createElement('div');
+        e.style.cssText = 'position:fixed; top:10px; right:10px; background:var(--accent); color:white; padding:15px; border-radius:8px; z-index:1001;';
+        e.innerText = m; document.body.appendChild(e); setTimeout(() => e.remove(), 3000);
+    }
+    function showAnnouncement(msg) {
+        const a = document.getElementById('announcements');
+        const el = document.createElement('div'); el.className = 'announcement'; el.innerText = msg;
+        a.appendChild(el); setTimeout(() => el.remove(), 4000);
+    }
+    function getCardClass(v) { if(v===-2) return 'val-neg2'; if(v===-1) return 'val-neg1'; if(v===0) return 'val-0'; if(v>=1&&v<=4) return 'val-low'; if(v>=5&&v<=8) return 'val-mid'; if(v>=9) return 'val-high'; return ''; }
+    function createCardHTML(val, isUp, onClick="") {
+        if(val===null) return '<div style="border:2px dashed #555; border-radius:6px; width:100%; aspect-ratio:2/3;"></div>';
+        const cls = getCardClass(val); const up = isUp?'up':''; const disp = (val===6||val===9)?`<u>${val}</u>`:val;
+        return `<div class="card-container ${up}" onclick="${onClick}"><div class="card-inner"><div class="card-face card-back"></div><div class="card-face card-front ${cls}">${disp}</div></div></div>`;
+    }
+    function getVisibleSum(p) { return p.grid.reduce((s,v,i)=>s+(p.visible[i]&&v!==null?v:0),0); }
+    function formatTime(sec) { const m = Math.floor(sec/60); const s = sec%60; return (m>0?m+'m ':'') + s+'s'; }
+
+    socket.on('available_rooms', (rooms) => {
+        const list = document.getElementById('rooms-list');
+        if (!rooms.length) { list.innerHTML = '<p style="color:#aaa;">No active rooms available</p>'; }
+        else { list.innerHTML = rooms.map(r => `<div class="room-item" onclick="selectRoom('${r.code}')"><strong>${r.roomName}</strong><br><span style="color:#aaa; font-size:12px;">Code: ${r.code} | ${r.playerCount} players | ${r.status}</span></div>`).join(''); }
+        document.getElementById('available-rooms-modal').classList.remove('hidden');
+    });
+
+    socket.on('room_players', (room) => {
+        document.getElementById('available-rooms-modal').classList.add('hidden');
+        document.getElementById('room-select-title').innerText = room.roomName;
+        const list = document.getElementById('players-list');
+        list.innerHTML = room.players.map(p => {
+            let statusClass = 'status-active', statusTxt = 'ACTIVE', clickable = false;
+            if (p.kicked_pending) { statusClass = 'status-kicked'; statusTxt = 'KICKED'; }
+            else if (p.disconnected) { statusClass = 'status-inactive'; statusTxt = 'INACTIVE'; clickable = true; }
+            return `<div class="player-item" onclick="${clickable ? `selectPlayer('${p.id}', '${p.name}', '${room.code}')` : ''}" style="${clickable?'cursor:pointer;':'opacity:0.6;'}"><div style="text-align:left;"><strong>${p.emoji} ${p.name}</strong><br><span style="color:#aaa; font-size:12px;">Score: ${p.score}</span></div><span class="status-badge ${statusClass}">${statusTxt}</span></div>`;
+        }).join('');
+        document.getElementById('select-player-modal').classList.remove('hidden');
+    });
+
+    socket.on('announcement', (msg) => showAnnouncement(msg));
+
+    socket.on('state', (state) => {
+        currentCode = state.code;
+        ['lobby', 'room', 'available-rooms-modal', 'select-player-modal', 'game', 'game-over'].forEach(id => document.getElementById(id).classList.add('hidden'));
+
+        if (state.gamePhase === 'LOBBY') {
+            document.getElementById('lobby').classList.remove('hidden');
+            document.getElementById('room').classList.remove('hidden');
+            document.getElementById('room-name').innerText = `${state.roomName} - Code: ${state.code}`;
+            const players = Object.values(state.players).filter(p => !p.kicked_pending);
+            document.getElementById('player-list').innerHTML = players.map(p => `<div style="background:#333; padding:10px; margin:5px; border-radius:5px;">${p.emoji} ${p.name}${state.hostId === p.id ? ' 👑' : ''}</div>`).join('');
+            document.getElementById('start-btn').disabled = players.length < 2;
+            document.getElementById('setting-room-name').value = state.roomName;
+            document.getElementById('setting-target-score').value = state.settings.targetScore;
+            document.getElementById('setting-buffer-time').value = state.settings.bufferTimeSec;
+            document.getElementById('setting-penalty').value = state.settings.rejoinPenalty;
+        } else if (['ROUND_OVER', 'MATCH_OVER', 'ABANDONED'].includes(state.gamePhase)) {
+            document.getElementById('game-over').classList.remove('hidden');
+            const goTitle = document.getElementById('go-title');
+            if (state.gamePhase === 'ABANDONED') { goTitle.innerText = '❌ GAME ABANDONED'; goTitle.style.color = 'var(--accent)'; }
+            else if (state.gamePhase === 'MATCH_OVER') { goTitle.innerText = '🎉 MATCH OVER 🎉'; goTitle.style.color = 'var(--gold)'; }
+            else { goTitle.innerText = '🏆 ROUND OVER 🏆'; goTitle.style.color = 'var(--gold)'; }
+
+            if (state.kickedHistory?.length) {
+                document.getElementById('kicked-history').innerHTML = `<div class="area" style="background:rgba(192,57,43,0.2); border-left:4px solid #c0392b; text-align:left;"><strong style="color:#c0392b;">⚠️ Kicked Players:</strong><br>` + state.kickedHistory.map(k => `<span style="font-size:12px; color:#aaa;">${k.name}</span>`).join(', ') + '</div>';
+            } else { document.getElementById('kicked-history').innerHTML = ''; }
+
+            let scores = document.getElementById('scores-container');
+            scores.innerHTML = '';
+            if (state.gamePhase !== 'ABANDONED') {
+                let sorted = Object.keys(state.globalScores).sort((a,b)=>state.globalScores[b]-state.globalScores[a]);
+                sorted.forEach((name, idx) => {
+                    let pid = Object.keys(state.players).find(k=>state.players[k]?.name===name);
+                    let rs = state.finalScores?.[pid] || { finalScore:0 };
+                    scores.innerHTML += `<div class="area" style="${idx===0?'border:2px solid var(--gold)':''}"><div style="display:flex; justify-content:space-between; align-items:center;"><div style="text-align:left;"><strong>#${idx+1} ${state.players[pid]?.emoji||''} ${name}</strong></div><div style="text-align:right;"><span style="font-size:12px; color:#aaa;">Round: ${rs.finalScore}</span><br><strong style="color:var(--gold); font-size:18px;">Total: ${state.globalScores[name]}</strong></div></div></div>`;
+                });
+            }
+            if (state.gamePhase === 'MATCH_OVER') {
+                const winner = Object.keys(state.globalScores).sort((a,b)=>state.globalScores[b]-state.globalScores[a])[0];
+                document.getElementById('go-actions').innerHTML = `<h2 style="color:var(--gold);">🥇 ${winner} Wins!</h2><button onclick="socket.emit('start_game', currentCode)" style="width:auto; padding:10px 30px;">Play Again</button>`;
+            } else if (state.gamePhase === 'ABANDONED') {
+                document.getElementById('go-actions').innerHTML = `<p style="color:var(--accent);">Not enough players to continue.</p><button onclick="location.reload()" style="width:auto; padding:10px 30px;">Return to Lobby</button>`;
+            } else {
+                document.getElementById('go-actions').innerHTML = `<button onclick="socket.emit('next_round', currentCode)" style="width:auto; padding:10px 30px;">Next Round</button>`;
+            }
+        } else {
+            document.getElementById('game').classList.remove('hidden');
+            const pauseAlert = document.getElementById('pause-alert');
+            if (state.pausedBy) {
+                const pausedPlayer = state.players[state.pausedBy.playerId];
+                const elapsed = Date.now() - (pausedPlayer.disconnectTime || Date.now());
+                const remaining = Math.max(0, (state.settings.bufferTimeSec||120)*1000 - elapsed);
+                const remainingSec = Math.ceil(remaining/1000);
+                const isHost = state.hostId === socket.id;
+                pauseAlert.innerHTML = `<div class="pause-banner"><span>⏸️ GAME PAUSED – waiting for ${pausedPlayer?.emoji||''} ${pausedPlayer?.name||'Player'} (${formatTime(remainingSec)} remaining)</span><div style="display:flex; gap:5px;">${isHost ? `<button onclick="socket.emit('extend_buffer', {code:'${state.code}', playerId:'${state.pausedBy.playerId}', additionalSec:60})">+60s</button>` : ''}${isHost ? `<button onclick="socket.emit('kick_player', {code:'${state.code}', playerId:'${state.pausedBy.playerId}'})">Kick</button>` : ''}</div></div>`;
+                pauseAlert.classList.remove('hidden');
+            } else { pauseAlert.classList.add('hidden'); }
+
+            document.getElementById('room-code-display').innerText = `${state.roomName} – ${state.code}`;
+            const sb = document.getElementById('scoreboard-body');
+            sb.innerHTML = '';
+            Object.values(state.players).filter(p => !p.kicked_pending).forEach(p => {
+                let score = state.globalScores[p.name] || 0;
+                let danger = score >= (state.settings.targetScore - 20) ? 'color:var(--accent);' : '';
+                sb.innerHTML += `<tr><td>${p.emoji} ${p.name}</td><td style="${danger}">${score}</td></tr>`;
+            });
+
+            const turnInd = document.getElementById('turn-indicator');
+            const myArea = document.getElementById('my-area');
+            const myPlayer = state.players[socket.id];
+            if (state.gamePhase === 'SETUP') {
+                let count = myPlayer?.visible?.filter(Boolean).length || 0;
+                turnInd.innerHTML = `SETUP: FLIP ${2-count} MORE CARD${2-count!==1?'S':''}`;
+                turnInd.style.color = 'var(--accent)';
+                if(myArea) myArea.classList.add('active-turn');
+            } else if (state.gamePhase === 'PAUSED') {
+                turnInd.innerHTML = '⏸️ GAME PAUSED'; turnInd.style.color = 'var(--accent)';
+            } else {
+                let isMyTurn = state.playerOrder[state.turnIndex] === socket.id;
+                turnInd.innerHTML = (state.gamePhase==='LAST_TURN'?'⚠️ LAST TURN! ':'') + (isMyTurn?'🎯 YOUR TURN!':`${state.players[state.playerOrder[state.turnIndex]]?.emoji||''} ${state.players[state.playerOrder[state.turnIndex]]?.name||'Unknown'}'s Turn`);
+                turnInd.style.color = isMyTurn ? 'var(--gold)' : 'white';
+                if(myArea) myArea.classList.toggle('active-turn', isMyTurn);
+            }
+
+            const discard = document.getElementById('discard-wrapper');
+            let topD = state.discardPile[state.discardPile.length-1];
+            discard.innerHTML = topD !== undefined ? createCardHTML(topD, true, "action('draw_discard')") : '<div class="card-inner"><div class="card-face card-front" style="background:#555;"></div></div>';
+            document.getElementById('deck-count').innerText = `Cards: ${state.deckCount || 0}`;
+
+            const actionArea = document.getElementById('action-area');
+            if (state.playerOrder[state.turnIndex] === socket.id && state.currentAction && state.gamePhase !== 'PAUSED') {
+                actionArea.classList.remove('hidden');
+                let vs = document.getElementById('drawn-card-val');
+                if (state.currentAction.type.includes('drawn')) {
+                    let c = state.currentAction.card;
+                    vs.innerHTML = (c===6||c===9)?`<u>${c}</u>`:c;
+                    vs.className = getCardClass(c);
+                    document.getElementById('discard-btn').classList.toggle('hidden', state.currentAction.type !== 'drawn_deck');
+                }
+            } else { actionArea.classList.add('hidden'); }
+
+            if (myPlayer && !myPlayer.kicked_pending) {
+                document.getElementById('my-stats').innerHTML = `Sum: <b>${getVisibleSum(myPlayer)}</b>`;
+                document.getElementById('my-grid').innerHTML = myPlayer.grid.map((v,i)=>createCardHTML(v, myPlayer.visible[i], `action('grid_click',${i})`)).join('');
+            }
+            const others = document.getElementById('others-area');
+            others.innerHTML = '';
+            state.playerOrder.forEach(id => {
+                if (id === socket.id) return;
+                let p = state.players[id];
+                if (!p || p.kicked_pending) return;
+                let isTurn = state.playerOrder[state.turnIndex] === id && state.gamePhase !== 'SETUP' && state.gamePhase !== 'PAUSED';
+                others.innerHTML += `<div class="area opp-area" style="${isTurn?'box-shadow:0 0 15px var(--gold); border:2px solid var(--gold)':''}"><h4 style="margin:0; font-size:14px; color:${isTurn?'var(--gold)':'white'}">${p.emoji} ${p.name}</h4><div style="font-size:10px; color:#aaa; margin-bottom:10px;">Sum: ${getVisibleSum(p)}</div><div class="grid opp-grid">${p.grid.map((v,i)=>createCardHTML(v, p.visible[i], '')).join('')}</div></div>`;
+            });
+        }
+    });
+    socket.on('error', (msg) => showError(msg));
+</script>
+</body>
+</html>

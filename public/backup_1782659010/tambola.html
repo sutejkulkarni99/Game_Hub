@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambola – Atheris</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+:root {
+    --bg: #090A0E; --bg-elevated: #0F1117;
+    --surface: rgba(255,255,255,0.03); --surface-hover: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.06); --border-hover: rgba(168,85,247,0.25);
+    --text-primary: #F8FAFC; --text-secondary: #94A3B8; --text-muted: #64748B;
+    --accent-purple: #A855F7; --accent-cyan: #06B6D4; --accent-green: #10B981;
+    --accent-orange: #F97316; --accent-red: #EF4444; --accent-yellow: #F59E0B;
+    --accent-blue: #2563EB; --shadow: 0 8px 32px rgba(0,0,0,0.35);
+    --radius-lg: 24px; --radius-md: 16px; --radius-sm: 12px;
+    --transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+[data-theme="light"] {
+    --bg: #F1F5F9; --bg-elevated: #FFFFFF;
+    --surface: rgba(0,0,0,0.03); --surface-hover: rgba(0,0,0,0.06);
+    --border: rgba(0,0,0,0.08); --border-hover: rgba(168,85,247,0.35);
+    --text-primary: #0F172A; --text-secondary: #475569; --text-muted: #94A3B8;
+    --accent-purple: #7C3AED; --accent-cyan: #0891B2; --accent-green: #059669;
+    --accent-orange: #EA580C; --accent-red: #DC2626; --accent-yellow: #D97706;
+    --accent-blue: #1D4ED8; --shadow: 0 8px 32px rgba(0,0,0,0.08);
+}
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(168,85,247,0.07) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(6,182,212,0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.01) 0%, transparent 70%);
+    color: var(--text-primary);
+    min-height: 100vh; margin: 0; padding: 32px 24px;
+    -webkit-font-smoothing: antialiased;
+}
+[data-theme="light"] body {
+    background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(168,85,247,0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(6,182,212,0.03) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.01) 0%, transparent 70%);
+}
+#themeToggle {
+    position: fixed; top: 20px; right: 20px;
+    width: 48px; height: 48px; border-radius: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-secondary); font-size: 1.4rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: var(--transition); z-index: 1000; backdrop-filter: blur(10px);
+}
+#themeToggle:hover {
+    background: var(--surface-hover); border-color: var(--border-hover); transform: scale(1.05);
+}
+.back-btn {
+    position: fixed; top: 16px; left: 16px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 8px 14px;
+    color: var(--text-secondary); text-decoration: none; font-weight: 600;
+    transition: var(--transition); z-index: 100;
+}
+.back-btn:hover { background: var(--surface-hover); border-color: var(--border-hover); }
+.hidden { display: none !important; }
+input, button { font-family: inherit; border-radius: var(--radius-sm); padding: 10px 16px; border: 1px solid var(--border); background: var(--surface); color: var(--text-primary); transition: var(--transition); }
+button { background: var(--accent-purple); color: white; border: none; cursor: pointer; }
+button:hover { background: var(--accent-cyan); transform: scale(1.02); }
+#tambola-controls {
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: center; margin: 15px 0;
+}
+.ticket { display: inline-block; margin: 20px auto; }
+.ticket table { border-collapse: collapse; margin: 0 auto; }
+.ticket td { width: 40px; height: 40px; border: 1px solid var(--border); text-align: center; vertical-align: middle; font-size: 18px; cursor: pointer; transition: var(--transition); }
+.ticket td.marked { background: var(--accent-purple); color: white; }
+.ticket td.blank { background: transparent; cursor: default; }
+.called-numbers { max-width: 400px; margin: 10px auto; }
+.called-numbers span { display: inline-block; background: var(--surface); padding: 5px 10px; margin: 3px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.winners { margin-top: 20px; }
+</style>
+</head>
+<body>
+<button id="themeToggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+<a href="/" class="back-btn">← Hub</a>
+
+<div id="lobby">
+    <h1 style="color:var(--accent-cyan);">🎟️ Tambola</h1>
+    <input type="text" id="name" placeholder="Your Name" maxlength="20"><br>
+    <button onclick="createRoom()">Create Room</button>
+    <hr style="border-color:var(--border); width:200px; margin:20px auto;">
+    <input type="text" id="join-code" placeholder="4-Digit Code" maxlength="4"><br>
+    <button onclick="joinRoom()">Join Room</button>
+</div>
+
+<div id="room" class="hidden">
+    <h2 id="room-code"></h2>
+    <div id="player-list"></div>
+    <button id="start-btn" onclick="startGame()">Start Game</button>
+</div>
+
+<div id="game" class="hidden">
+    <h2 id="game-room-code"></h2>
+    <div id="tambola-controls">
+        <button id="autoCallBtn" onclick="toggleAutoCall()">▶ Auto Call</button>
+        <label style="color:var(--text-secondary); font-size:0.85rem;">Speed:
+            <select onchange="setAutoCallSpeed(parseInt(this.value))" style="background:var(--surface); color:var(--text-primary); border:1px solid var(--border); border-radius:var(--radius-sm); padding:4px 8px;">
+                <option value="2000">2s</option>
+                <option value="3000" selected>3s</option>
+                <option value="5000">5s</option>
+                <option value="8000">8s</option>
+            </select>
+        </label>
+        <button id="audioToggle" onclick="toggleAudio()">🔊</button>
+    </div>
+    <button id="call-btn" onclick="callNumber()">Call Next Number</button>
+    <div class="called-numbers" id="called-numbers"></div>
+    <div class="ticket" id="ticket"></div>
+    <div class="winners" id="winners"></div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// --- Original Tambola logic ---
+const socket = io('/tambola');
+let currentCode = null;
+let currentTicket = null;
+let currentMarks = null;
+
+function createRoom() {
+    const name = document.getElementById('name').value.trim();
+    if (!name) return alert('Enter name');
+    socket.emit('create_room', { name });
+}
+function joinRoom() {
+    const name = document.getElementById('name').value.trim();
+    const code = document.getElementById('join-code').value.trim();
+    if (!name || !code) return alert('Enter name and code');
+    socket.emit('join_room', { code, name });
+}
+function startGame() { socket.emit('start_game', currentCode); }
+function callNumber() { socket.emit('call_number', currentCode); }
+
+socket.on('state', (room) => {
+    currentCode = room.code;
+    if (room.gamePhase === 'LOBBY') {
+        document.getElementById('lobby').classList.add('hidden');
+        document.getElementById('room').classList.remove('hidden');
+        document.getElementById('game').classList.add('hidden');
+        document.getElementById('room-code').innerText = `Room: ${room.code}`;
+        document.getElementById('player-list').innerHTML = Object.values(room.players).map(p => `<div>${p.name}</div>`).join('');
+        document.getElementById('start-btn').disabled = room.hostId !== socket.id;
+    } else if (room.gamePhase === 'PLAYING') {
+        document.getElementById('lobby').classList.add('hidden');
+        document.getElementById('room').classList.add('hidden');
+        document.getElementById('game').classList.remove('hidden');
+        document.getElementById('game-room-code').innerText = `Room: ${room.code}`;
+        const myPlayer = room.players[socket.id];
+        if (myPlayer && myPlayer.ticket) {
+            currentTicket = myPlayer.ticket;
+            currentMarks = myPlayer.marks;
+            renderTicket();
+        }
+        const calledDiv = document.getElementById('called-numbers');
+        calledDiv.innerHTML = room.calledNumbers.slice(-10).map(n => `<span>${n}</span>`).join('');
+        const winnersDiv = document.getElementById('winners');
+        winnersDiv.innerHTML = Object.entries(room.winners).map(([pattern, wins]) => `<div><strong>${pattern}:</strong> ${wins.map(w=>w.name).join(', ')}</div>`).join('');
+        document.getElementById('call-btn').disabled = room.hostId !== socket.id;
+    }
+});
+
+function renderTicket() {
+    if (!currentTicket) return;
+    const ticketDiv = document.getElementById('ticket');
+    let html = '<table>';
+    for (let r = 0; r < 3; r++) {
+        html += '<tr>';
+        for (let c = 0; c < 9; c++) {
+            const num = currentTicket[r][c];
+            if (num === 0) {
+                html += '<td class="blank"></td>';
+            } else {
+                const marked = currentMarks[r][c] ? 'marked' : '';
+                html += `<td class="${marked}" onclick="markNumber(${r},${c})">${num}</td>`;
+            }
+        }
+        html += '</tr>';
+    }
+    html += '</table>';
+    ticketDiv.innerHTML = html;
+}
+
+function markNumber(row, col) {
+    socket.emit('mark_number', { code: currentCode, row, col });
+}
+
+socket.on('number_called', (num, called, remaining) => {
+    // optional
+});
+socket.on('pattern_won', (pattern, winners) => {
+    alert(`${pattern.replace(/_/g, ' ')} won by ${winners.map(w=>w.name).join(', ')}!`);
+});
+socket.on('announcement', msg => alert(msg));
+socket.on('error', msg => alert(msg));
+
+// --- NEW: Auto-Call & Audio ---
+let autoCallTimer = null;
+let autoCallSpeed = 3000;
+let audioEnabled = true;
+
+function setAutoCallSpeed(ms) {
+    autoCallSpeed = ms;
+    if (autoCallTimer) {
+        clearInterval(autoCallTimer);
+        startAutoCall();
+    }
+}
+
+function toggleAutoCall() {
+    const btn = document.getElementById('autoCallBtn');
+    if (autoCallTimer) {
+        clearInterval(autoCallTimer);
+        autoCallTimer = null;
+        btn.textContent = '▶ Auto Call';
+    } else {
+        startAutoCall();
+        btn.textContent = '⏸ Auto Call';
+    }
+}
+
+function startAutoCall() {
+    if (autoCallTimer) clearInterval(autoCallTimer);
+    autoCallTimer = setInterval(() => {
+        const callBtn = document.getElementById('call-btn');
+        if (callBtn && !callBtn.disabled) {
+            callNumber();
+        }
+    }, autoCallSpeed);
+}
+
+function toggleAudio() {
+    audioEnabled = !audioEnabled;
+    document.getElementById('audioToggle').textContent = audioEnabled ? '🔊' : '🔇';
+}
+
+function speakNumber(num) {
+    if (!audioEnabled || !('speechSynthesis' in window)) return;
+    const utterance = new SpeechSynthesisUtterance(num.toString());
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+}
+
+// Hook into existing socket event
+const origSocketOn = socket.on;
+socket.on('number_called', function(num) {
+    speakNumber(num);
+    // Also update called numbers display if needed (already handled by state)
+});
+</script>
+</body>
+</html>

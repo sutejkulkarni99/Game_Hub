@@ -1,0 +1,9 @@
+services:
+  game-hub:
+    build: .
+    ports:
+      - "8085:8085"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    container_name: game-hub

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Hub</title>
+    <style>
+        :root { --bg: #111; --surface: #222; --accent: #e94560; --gold: #f1c40f; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); color: white; text-align: center; margin: 0; padding: 20px; }
+        h1 { color: var(--gold); font-size: 3em; margin: 5vh 0 2vh; }
+        .game-cards { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 10vh; }
+        .game-card { background: var(--surface); border-radius: 20px; padding: 30px; width: 250px; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; border: 2px solid transparent; }
+        .game-card:hover { transform: translateY(-10px); box-shadow: 0 10px 30px rgba(233,69,96,0.3); border-color: var(--accent); }
+        .game-card h2 { margin-top: 0; color: var(--gold); }
+        .game-card p { color: #aaa; }
+        .emoji { font-size: 4em; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🎮 Game Hub 🎮</h1>
+    <p style="color:#aaa;">Choose your game</p>
+    <div class="game-cards">
+        <div class="game-card" onclick="window.location='/partyjo'">
+            <div class="emoji">🃏</div>
+            <h2>Party Jo</h2>
+            <p>Multiplayer card elimination game inspired by Skyjo</p>
+        </div>
+        <div class="game-card" onclick="window.location='/tambola'">
+            <div class="emoji">🎟️</div>
+            <h2>Tambola</h2>
+            <p>Classic Indian Housie with tickets & patterns</p>
+        </div>
+    </div>
+</body>
+</html>

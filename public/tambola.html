@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambola</title>
+    <style>
+        :root { --bg: #111; --surface: #222; --accent: #e94560; --gold: #f1c40f; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); color: white; text-align: center; margin: 0; padding: 10px; }
+        .back-btn { position: fixed; top: 10px; left: 10px; background: var(--surface); color: white; border: 2px solid var(--gold); border-radius: 8px; padding: 8px 12px; text-decoration: none; font-weight: bold; z-index: 100; }
+        input, button { padding: 12px; border-radius: 8px; margin: 5px; font-size: 16px; }
+        input { background: var(--surface); color: white; border: 2px solid #444; }
+        button { background: var(--accent); color: white; border: none; cursor: pointer; }
+        .ticket { display: inline-block; margin: 20px auto; }
+        .ticket table { border-collapse: collapse; margin: 0 auto; }
+        .ticket td { width: 40px; height: 40px; border: 1px solid #444; text-align: center; vertical-align: middle; font-size: 18px; cursor: pointer; }
+        .ticket td.marked { background: var(--accent); color: white; }
+        .ticket td.blank { background: transparent; cursor: default; }
+        .called-numbers { max-width: 400px; margin: 10px auto; }
+        .called-numbers span { display: inline-block; background: var(--surface); padding: 5px 10px; margin: 3px; border-radius: 5px; }
+        .winners { margin-top: 20px; }
+    </style>
+</head>
+<body>
+<a href="/" class="back-btn">← Hub</a>
+<div id="lobby">
+    <h1>🎟️ Tambola</h1>
+    <input type="text" id="name" placeholder="Your Name" maxlength="20"><br>
+    <button onclick="createRoom()">Create Room</button>
+    <hr>
+    <input type="text" id="join-code" placeholder="4-Digit Code" maxlength="4"><br>
+    <button onclick="joinRoom()">Join Room</button>
+</div>
+<div id="room" class="hidden">
+    <h2 id="room-code"></h2>
+    <div id="player-list"></div>
+    <button id="start-btn" onclick="startGame()">Start Game</button>
+</div>
+<div id="game" class="hidden">
+    <h2 id="game-room-code"></h2>
+    <button id="call-btn" onclick="callNumber()">Call Next Number</button>
+    <div class="called-numbers" id="called-numbers"></div>
+    <div class="ticket" id="ticket"></div>
+    <div class="winners" id="winners"></div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io('/tambola');
+    let currentCode = null;
+    let currentTicket = null;
+    let currentMarks = null;
+
+    function createRoom() {
+        const name = document.getElementById('name').value.trim();
+        if (!name) return alert('Enter name');
+        socket.emit('create_room', { name });
+    }
+    function joinRoom() {
+        const name = document.getElementById('name').value.trim();
+        const code = document.getElementById('join-code').value.trim();
+        if (!name || !code) return alert('Enter name and code');
+        socket.emit('join_room', { code, name });
+    }
+    function startGame() { socket.emit('start_game', currentCode); }
+    function callNumber() { socket.emit('call_number', currentCode); }
+
+    socket.on('state', (room) => {
+        currentCode = room.code;
+        if (room.gamePhase === 'LOBBY') {
+            document.getElementById('lobby').classList.add('hidden');
+            document.getElementById('room').classList.remove('hidden');
+            document.getElementById('game').classList.add('hidden');
+            document.getElementById('room-code').innerText = `Room: ${room.code}`;
+            document.getElementById('player-list').innerHTML = Object.values(room.players).map(p => `<div>${p.name}</div>`).join('');
+            document.getElementById('start-btn').disabled = room.hostId !== socket.id;
+        } else if (room.gamePhase === 'PLAYING') {
+            document.getElementById('lobby').classList.add('hidden');
+            document.getElementById('room').classList.add('hidden');
+            document.getElementById('game').classList.remove('hidden');
+            document.getElementById('game-room-code').innerText = `Room: ${room.code}`;
+            const myPlayer = room.players[socket.id];
+            if (myPlayer && myPlayer.ticket) {
+                currentTicket = myPlayer.ticket;
+                currentMarks = myPlayer.marks;
+                renderTicket();
+            }
+            const calledDiv = document.getElementById('called-numbers');
+            calledDiv.innerHTML = room.calledNumbers.slice(-10).map(n => `<span>${n}</span>`).join('');
+            const winnersDiv = document.getElementById('winners');
+            winnersDiv.innerHTML = Object.entries(room.winners).map(([pattern, wins]) => `<div><strong>${pattern}:</strong> ${wins.map(w=>w.name).join(', ')}</div>`).join('');
+            document.getElementById('call-btn').disabled = room.hostId !== socket.id;
+        }
+    });
+
+    function renderTicket() {
+        if (!currentTicket) return;
+        const ticketDiv = document.getElementById('ticket');
+        let html = '<table>';
+        for (let r = 0; r < 3; r++) {
+            html += '<tr>';
+            for (let c = 0; c < 9; c++) {
+                const num = currentTicket[r][c];
+                if (num === 0) {
+                    html += '<td class="blank"></td>';
+                } else {
+                    const marked = currentMarks[r][c] ? 'marked' : '';
+                    html += `<td class="${marked}" onclick="markNumber(${r},${c})">${num}</td>`;
+                }
+            }
+            html += '</tr>';
+        }
+        html += '</table>';
+        ticketDiv.innerHTML = html;
+    }
+
+    function markNumber(row, col) {
+        socket.emit('mark_number', { code: currentCode, row, col });
+    }
+
+    socket.on('number_called', (num, called, remaining) => {
+        // Optional: auto-update called list
+    });
+    socket.on('pattern_won', (pattern, winners) => {
+        alert(`${pattern.replace(/_/g, ' ')} won by ${winners.map(w=>w.name).join(', ')}!`);
+    });
+    socket.on('announcement', msg => alert(msg));
+    socket.on('error', msg => alert(msg));
+</script>
+</body>
+</html>

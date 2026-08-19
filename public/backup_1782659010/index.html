@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Hub – Atheris</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+:root {
+    --bg: #090A0E; --bg-elevated: #0F1117;
+    --surface: rgba(255,255,255,0.03); --surface-hover: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.06); --border-hover: rgba(168,85,247,0.25);
+    --text-primary: #F8FAFC; --text-secondary: #94A3B8; --text-muted: #64748B;
+    --accent-purple: #A855F7; --accent-cyan: #06B6D4; --accent-green: #10B981;
+    --accent-orange: #F97316; --accent-red: #EF4444; --accent-yellow: #F59E0B;
+    --accent-blue: #2563EB; --shadow: 0 8px 32px rgba(0,0,0,0.35);
+    --radius-lg: 24px; --radius-md: 16px; --radius-sm: 12px;
+    --transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+[data-theme="light"] {
+    --bg: #F1F5F9; --bg-elevated: #FFFFFF;
+    --surface: rgba(0,0,0,0.03); --surface-hover: rgba(0,0,0,0.06);
+    --border: rgba(0,0,0,0.08); --border-hover: rgba(168,85,247,0.35);
+    --text-primary: #0F172A; --text-secondary: #475569; --text-muted: #94A3B8;
+    --accent-purple: #7C3AED; --accent-cyan: #0891B2; --accent-green: #059669;
+    --accent-orange: #EA580C; --accent-red: #DC2626; --accent-yellow: #D97706;
+    --accent-blue: #1D4ED8; --shadow: 0 8px 32px rgba(0,0,0,0.08);
+}
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(168,85,247,0.07) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(6,182,212,0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.01) 0%, transparent 70%);
+    color: var(--text-primary);
+    min-height: 100vh; margin: 0; padding: 32px 24px;
+    -webkit-font-smoothing: antialiased;
+}
+[data-theme="light"] body {
+    background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(168,85,247,0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(6,182,212,0.03) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.01) 0%, transparent 70%);
+}
+#themeToggle {
+    position: fixed; top: 20px; right: 20px;
+    width: 48px; height: 48px; border-radius: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-secondary); font-size: 1.4rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: var(--transition); z-index: 1000; backdrop-filter: blur(10px);
+}
+#themeToggle:hover {
+    background: var(--surface-hover); border-color: var(--border-hover); transform: scale(1.05);
+}
+.container { max-width: 800px; margin: 0 auto; text-align: center; }
+.brand-logo {
+    width: 64px; height: 64px; margin: 0 auto 16px;
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+    border-radius: var(--radius-lg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; box-shadow: 0 4px 20px rgba(168,85,247,0.25);
+}
+.service-grid { display: grid; gap: 20px; margin-top: 40px; }
+.service-card .icon { font-size: 2.5rem; margin-right: 16px; }
+@media (min-width: 640px) { .service-grid { grid-template-columns: 1fr 1fr; } }
+.service-card {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 18px 20px;
+    text-decoration: none; color: inherit;
+    transition: var(--transition); position: relative; overflow: hidden;
+}
+.service-card:hover {
+    background: var(--surface-hover); transform: translateY(-3px);
+    border-color: var(--border-hover); box-shadow: var(--shadow);
+}
+.status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em;
+    border: 1px solid transparent;
+}
+.status-pill.online { background: rgba(16,185,129,0.12); color: var(--accent-green); border-color: rgba(16,185,129,0.2); }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+</style>
+</head>
+<body>
+<button id="themeToggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+<div class="container">
+    <div class="brand-logo">🎮</div>
+    <h1 style="font-size:2.2rem; font-weight:800; letter-spacing:-0.03em; margin-bottom:8px;">Game <span style="color:var(--accent-purple);">Hub</span></h1>
+    <p style="color:var(--text-muted); font-size:0.95rem;">Choose your game</p>
+    <div class="service-grid">
+        <a href="/partyjo" class="service-card" style="--service-color: var(--accent-yellow);">
+            <div style="display:flex; align-items:center; gap:14px;">
+                <div class="icon">🃏</div>
+                <div><h3 style="font-weight:700; margin:0 0 4px;">Party Jo</h3><p style="color:var(--text-muted); margin:0; font-size:0.85rem;">Multiplayer card elimination</p></div>
+            </div>
+            <span class="status-pill online"><span class="status-dot"></span>Play</span>
+        </a>
+        <a href="/tambola" class="service-card" style="--service-color: var(--accent-cyan);">
+            <div style="display:flex; align-items:center; gap:14px;">
+                <div class="icon">🎟️</div>
+                <div><h3 style="font-weight:700; margin:0 0 4px;">Tambola</h3><p style="color:var(--text-muted); margin:0; font-size:0.85rem;">Classic Indian Housie</p></div>
+            </div>
+            <span class="status-pill online"><span class="status-dot"></span>Play</span>
+        </a>
+    </div>
+</div>
+<script>
+function toggleTheme() {
+    const root = document.documentElement;
+    const btn = document.getElementById('themeToggle');
+    if (root.getAttribute('data-theme') === 'light') {
+        root.removeAttribute('data-theme');
+        btn.textContent = '🌙';
+        localStorage.setItem('theme', 'dark');
+    } else {
+        root.setAttribute('data-theme', 'light');
+        btn.textContent = '☀️';
+        localStorage.setItem('theme', 'light');
+    }
+}
+(function() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.getElementById('themeToggle').textContent = '☀️';
+    }
+})();
+</script>
+</body>
+</html>

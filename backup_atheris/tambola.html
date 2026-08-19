@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambola</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+
+:root {
+    --bg: #090A0E;
+    --bg-elevated: #0F1117;
+    --surface: rgba(255, 255, 255, 0.03);
+    --surface-hover: rgba(255, 255, 255, 0.06);
+    --border: rgba(255, 255, 255, 0.06);
+    --border-hover: rgba(168, 85, 247, 0.25);
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    --accent-purple: #A855F7;
+    --accent-cyan: #06B6D4;
+    --accent-green: #10B981;
+    --accent-orange: #F97316;
+    --accent-red: #EF4444;
+    --accent-yellow: #F59E0B;
+    --accent-blue: #2563EB;
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+    --transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+[data-theme="light"] {
+    --bg: #F1F5F9;
+    --bg-elevated: #FFFFFF;
+    --surface: rgba(0,0,0,0.03);
+    --surface-hover: rgba(0,0,0,0.06);
+    --border: rgba(0,0,0,0.08);
+    --border-hover: rgba(168,85,247,0.35);
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #94A3B8;
+    --accent-purple: #7C3AED;
+    --accent-cyan: #0891B2;
+    --accent-green: #059669;
+    --accent-orange: #EA580C;
+    --accent-red: #DC2626;
+    --accent-yellow: #D97706;
+    --accent-blue: #1D4ED8;
+    --shadow: 0 8px 32px rgba(0,0,0,0.08);
+}
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(168, 85, 247, 0.07) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.01) 0%, transparent 70%);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 20px;
+    -webkit-font-smoothing: antialiased;
+}
+[data-theme="light"] body {
+    background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(168, 85, 247, 0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(6, 182, 212, 0.03) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.01) 0%, transparent 70%);
+}
+#themeToggle {
+    position: fixed; top: 20px; right: 20px;
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: var(--transition);
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+#themeToggle:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-hover);
+    transform: scale(1.05);
+}
+
+
+        :root {
+            --bg: #090A0E;
+            --bg-elevated: #0F1117;
+            --surface: rgba(255, 255, 255, 0.03);
+            --surface-hover: rgba(255, 255, 255, 0.06);
+            --border: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(168, 85, 247, 0.25);
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --text-muted: #64748B;
+            --accent-purple: #A855F7;
+            --accent-cyan: #06B6D4;
+            --accent-green: #10B981;
+            --accent-orange: #F97316;
+            --accent-red: #EF4444;
+            --accent-yellow: #F59E0B;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
+            --transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg);
+            background-image:
+                radial-gradient(ellipse at 20% 20%, rgba(168, 85, 247, 0.07) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.01) 0%, transparent 70%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 32px 24px;
+            text-align: center;
+            -webkit-font-smoothing: antialiased;
+        }
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.8rem;
+            z-index: 100;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+        }
+        .back-btn:hover { background: var(--surface-hover); border-color: var(--border-hover); color: var(--text-primary); }
+        input, button {
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            margin: 5px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: var(--transition);
+            outline: none;
+        }
+        input {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15); }
+        button {
+            background: var(--accent-purple);
+            color: white;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.25);
+        }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .brand-logo {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.25);
+            position: relative;
+            overflow: hidden;
+            margin: 0 auto 20px;
+        }
+        .brand-logo::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15) 100%);
+        }
+        h1 { color: var(--accent-purple); font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 10px; }
+        .area {
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: var(--transition);
+        }
+        .ticket { display: inline-block; margin: 20px auto; }
+        .ticket table { border-collapse: collapse; margin: 0 auto; }
+        .ticket td {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border);
+            text-align: center;
+            vertical-align: middle;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: var(--transition);
+        }
+        .ticket td:hover:not(.blank) { background: var(--surface-hover); }
+        .ticket td.marked {
+            background: var(--accent-purple);
+            color: white;
+            border-color: var(--accent-purple);
+        }
+        .ticket td.blank {
+            background: transparent;
+            cursor: default;
+            border-color: rgba(255,255,255,0.03);
+        }
+        .called-numbers {
+            max-width: 400px;
+            margin: 10px auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+        }
+        .called-numbers span {
+            display: inline-block;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .winners {
+            margin-top: 20px;
+            text-align: left;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .winners div {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+        .winners strong { color: var(--accent-purple); }
+        .hidden { display: none !important; }
+        @media (max-width: 640px) {
+            body { padding: 20px 16px; }
+            h1 { font-size: 1.6rem; }
+            .ticket td { width: 36px; height: 36px; font-size: 16px; }
+        }
+    
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<button id="themeToggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+
+<a href="/" class="back-btn">← Hub</a>
+
+<div id="lobby">
+    <div class="brand-logo">🎟️</div>
+    <h1>TAMBOLA</h1>
+    <p style="color: var(--text-muted); margin-bottom: 20px;">Classic Indian Housie</p>
+    <input type="text" id="name" placeholder="Your Name" maxlength="20"><br>
+    <button onclick="createRoom()">Create Room</button>
+    <hr style="border-color: var(--border); width: 200px; margin: 20px auto;">
+    <input type="text" id="join-code" placeholder="4-Digit Code" maxlength="4"><br>
+    <button onclick="joinRoom()" style="background: var(--accent-cyan);">Join Room</button>
+</div>
+
+<div id="room" class="hidden">
+    <h2 id="room-code" style="color: var(--accent-purple); font-weight: 700;"></h2>
+    <div id="player-list" style="margin: 20px 0; color: var(--text-secondary);"></div>
+    <button id="start-btn" onclick="startGame()">Start Game</button>
+</div>
+
+<div id="game" class="hidden">
+    <h2 id="game-room-code" style="color: var(--accent-purple); font-weight: 700;"></h2>
+    <button id="call-btn" onclick="callNumber()" style="margin-bottom: 20px;">Call Next Number</button>
+    <div class="called-numbers" id="called-numbers"></div>
+    <div class="ticket" id="ticket"></div>
+    <div class="winners" id="winners"></div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io('/tambola');
+    let currentCode = null;
+    let currentTicket = null;
+    let currentMarks = null;
+
+    function createRoom() {
+        const name = document.getElementById('name').value.trim();
+        if (!name) return alert('Enter name');
+        socket.emit('create_room', { name });
+    }
+    function joinRoom() {
+        const name = document.getElementById('name').value.trim();
+        const code = document.getElementById('join-code').value.trim();
+        if (!name || !code) return alert('Enter name and code');
+        socket.emit('join_room', { code, name });
+    }
+    function startGame() { socket.emit('start_game', currentCode); }
+    function callNumber() { socket.emit('call_number', currentCode); }
+
+    socket.on('state', (room) => {
+        currentCode = room.code;
+        if (room.gamePhase === 'LOBBY') {
+            document.getElementById('lobby').classList.add('hidden');
+            document.getElementById('room').classList.remove('hidden');
+            document.getElementById('game').classList.add('hidden');
+            document.getElementById('room-code').innerText = `Room: ${room.code}`;
+            document.getElementById('player-list').innerHTML = Object.values(room.players).map(p => `<div style="background: var(--surface); border: 1px solid var(--border); padding: 10px; margin: 5px; border-radius: var(--radius-sm); color: var(--text-primary);">${p.name}</div>`).join('');
+            document.getElementById('start-btn').disabled = room.hostId !== socket.id;
+        } else if (room.gamePhase === 'PLAYING') {
+            document.getElementById('lobby').classList.add('hidden');
+            document.getElementById('room').classList.add('hidden');
+            document.getElementById('game').classList.remove('hidden');
+            document.getElementById('game-room-code').innerText = `Room: ${room.code}`;
+            const myPlayer = room.players[socket.id];
+            if (myPlayer && myPlayer.ticket) {
+                currentTicket = myPlayer.ticket;
+                currentMarks = myPlayer.marks;
+                renderTicket();
+            }
+            const calledDiv = document.getElementById('called-numbers');
+            calledDiv.innerHTML = room.calledNumbers.slice(-10).map(n => `<span>${n}</span>`).join('');
+            const winnersDiv = document.getElementById('winners');
+            winnersDiv.innerHTML = Object.entries(room.winners).map(([pattern, wins]) => `<div><strong>${pattern.replace(/_/g, ' ')}:</strong> ${wins.map(w=>w.name).join(', ')}</div>`).join('');
+            document.getElementById('call-btn').disabled = room.hostId !== socket.id;
+        }
+    });
+
+    function renderTicket() {
+        if (!currentTicket) return;
+        const ticketDiv = document.getElementById('ticket');
+        let html = '<table>';
+        for (let r = 0; r < 3; r++) {
+            html += '<tr>';
+            for (let c = 0; c < 9; c++) {
+                const num = currentTicket[r][c];
+                if (num === 0) {
+                    html += '<td class="blank"></td>';
+                } else {
+                    const marked = currentMarks[r][c] ? 'marked' : '';
+                    html += `<td class="${marked}" onclick="markNumber(${r},${c})">${num}</td>`;
+                }
+            }
+            html += '</tr>';
+        }
+        html += '</table>';
+        ticketDiv.innerHTML = html;
+    }
+
+    function markNumber(row, col) {
+        socket.emit('mark_number', { code: currentCode, row, col });
+    }
+
+    socket.on('number_called', (num, called, remaining) => {
+        // Optional: auto-update called list
+    });
+    socket.on('pattern_won', (pattern, winners) => {
+        alert(`${pattern.replace(/_/g, ' ')} won by ${winners.map(w=>w.name).join(', ')}!`);
+    });
+    socket.on('announcement', msg => alert(msg));
+    socket.on('error', msg => alert(msg));
+</script>
+
+<script>
+function toggleTheme() {
+    const root = document.documentElement;
+    const btn = document.getElementById('themeToggle');
+    if (root.getAttribute('data-theme') === 'light') {
+        root.removeAttribute('data-theme');
+        btn.textContent = '🌙';
+        localStorage.setItem('theme', 'dark');
+    } else {
+        root.setAttribute('data-theme', 'light');
+        btn.textContent = '☀️';
+        localStorage.setItem('theme', 'light');
+    }
+}
+(function() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.getElementById('themeToggle').textContent = '☀️';
+    }
+})();
+</script>
+</body>
+</html>
