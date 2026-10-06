@@ -1,375 +1,1438 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Party Jo</title>
-    <style>
-        :root { --bg: #111; --surface: #222; --accent: #e94560; --gold: #f1c40f; --success: #4caf50; }
-        * { touch-action: manipulation; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: white; text-align: center; margin: 0; padding: 10px; overflow-x: hidden; user-select: none; }
-        .hidden { display: none !important; }
-        input, button, select { padding: 12px; font-size: 16px; border-radius: 8px; margin: 5px; outline: none; font-family: inherit; }
-        input { background: var(--surface); color: white; border: 2px solid #444; width: 80%; max-width: 250px; }
-        button { background: var(--accent); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; width: 80%; max-width: 250px; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .area { background: var(--surface); padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .flex-center { display: flex; justify-content: center; gap: 20px; align-items: center; flex-wrap: wrap; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; margin: 10px auto; }
-        #my-grid { max-width: 420px; gap: 8px; }
-        .card-container { perspective: 1000px; width: 100%; aspect-ratio: 2/3; cursor: pointer; position: relative; }
-        .card-inner { position: absolute; width: 100%; height: 100%; transition: transform 0.4s; transform-style: preserve-3d; }
-        .card-container.up .card-inner { transform: rotateY(180deg); }
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'Times New Roman', serif; font-size: 36px; font-weight: bold; border: 2px solid white; }
-        .card-back { background: linear-gradient(135deg, #FF007F, #FFFF00, #00FFFF); background-size: 200% 200%; animation: gradientShift 3s ease infinite; color: white; font-size: 12px; font-family: sans-serif; overflow: hidden; }
-        .card-back::after { content: "PARTY JO"; position: absolute; transform: rotate(-45deg); font-weight: 900; font-size: 1em; white-space: nowrap; }
-        .opp-grid .card-face { font-size: 14px; border-width: 1px; }
-        .opp-grid .card-back { font-size: 8px; }
-        .opp-grid .card-back::after { font-size: 6px; }
-        .card-front { transform: rotateY(180deg); background: white; color: black; background-image: radial-gradient(rgba(0,0,0,0.1) 1px, transparent 1px); background-size: 8px 8px; }
-        .val-neg2 { background-color: #1a237e; color: white; }
-        .val-neg1 { background-color: #3f51b5; color: white; }
-        .val-0 { background-color: #03a9f4; color: white; }
-        .val-low { background-color: #4caf50; color: white; }
-        .val-mid { background-color: #ffeb3b; color: black; }
-        .val-high { background-color: #e91e63; color: white; }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 200; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-        .modal-content { background: var(--surface); padding: 25px; border-radius: 12px; text-align: left; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
-        .modal-content h2 { color: var(--gold); margin-top: 0; margin-bottom: 20px; }
-        .modal-content label { display: block; margin-bottom: 8px; color: #aaa; font-weight: bold; }
-        .modal-content input { width: 100%; max-width: 100%; box-sizing: border-box; margin-bottom: 20px; }
-        .announcement { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: var(--gold); color: black; padding: 15px 20px; border-radius: 8px; z-index: 1000; animation: slideDown 0.3s ease; }
-        @keyframes slideDown { from { transform: translateX(-50%) translateY(-30px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
-        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-        .pause-banner { background: #c0392b; color: white; padding: 12px; border-radius: 8px; margin: 10px 0; border-left: 4px solid var(--accent); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        .pause-banner button { background: var(--success); color: white; width: auto; padding: 6px 12px; margin: 0; font-size: 12px; }
-        .room-item { background: #333; padding: 12px; margin: 8px 0; border-radius: 8px; cursor: pointer; border-left: 4px solid var(--gold); text-align: left; }
-        .player-item { background: #333; padding: 12px; margin: 8px 0; border-radius: 8px; cursor: pointer; border-left: 4px solid var(--gold); display: flex; justify-content: space-between; align-items: center; }
-        .status-badge { font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 4px; }
-        .status-active { background: var(--success); color: white; }
-        .status-inactive { background: var(--accent); color: white; }
-        .status-kicked { background: #c0392b; color: white; }
-        #room { position: relative; margin: 5vh auto; width: 90%; max-width: 400px; }
-        .opp-area { width: 48%; min-width: 140px; max-width: 240px; padding: 10px; }
-        .opp-grid { max-width: 220px; gap: 4px; }
-        .back-btn { position: fixed; top: 10px; left: 10px; background: var(--surface); color: white; border: 2px solid var(--gold); border-radius: 8px; padding: 8px 12px; text-decoration: none; font-weight: bold; z-index: 100; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#05070E">
+<title>Polaris Party Jo - Card Elimination Game</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><path d=%22M12 2L13.8 9.2L21 11L13.8 12.8L12 20L10.2 12.8L3 11L10.2 9.2L12 2Z%22 fill=%22%23F5E6C8%22/></svg>">
+<style>
+:root {
+  --bg:          #05070E;
+  --bg-deep:     #0A0D1A;
+  --card:        rgba(14, 18, 32, 0.8);
+  --card-hover:  rgba(18, 24, 42, 0.9);
+  --bd:          #1B2238;
+  --bd-hover:    #2A3455;
+  --fg:          #E8ECF5;
+  --mt:          #8B94AD;
+  --star:        #F5E6C8;
+  --aurora:      #7DD3FC;
+  --nebula:      #A78BFA;
+  --gn:          #4ADE80;
+  --yl:          #FBBF24;
+  --rd:          #F87171;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: var(--bg);
+  background-image: 
+    radial-gradient(circle at 50% 10%, #0D1426 0%, var(--bg) 80%),
+    radial-gradient(circle at 85% 60%, rgba(167, 139, 250, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 15% 80%, rgba(125, 211, 252, 0.04) 0%, transparent 50%);
+  color: var(--fg);
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  user-select: none;
+}
+
+header {
+  background: rgba(5, 7, 14, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--bd);
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.bc { display: flex; align-items: center; gap: .65rem; text-decoration: none; }
+
+.lg {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, rgba(245, 230, 200, 0.2), rgba(125, 211, 252, 0.1));
+  border: 1px solid rgba(245, 230, 200, 0.3);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 10px rgba(245, 230, 200, 0.2);
+}
+.lg svg { width: 20px; height: 20px; }
+
+.tt { font-size: 1.05rem; font-weight: 700; color: var(--fg); letter-spacing: -0.01em; }
+.tt span {
+  color: var(--star);
+  font-weight: 600;
+  margin-left: 6px;
+  font-size: .72rem;
+  background: rgba(245, 230, 200, 0.1);
+  padding: 2px 7px;
+  border-radius: 5px;
+  border: 1px solid rgba(245, 230, 200, 0.2);
+}
+
+.hr { display: flex; align-items: center; gap: .5rem; }
+
+.btn-icon {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  color: var(--fg);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all .15s;
+}
+.btn-icon:hover { background: var(--card-hover); border-color: var(--bd-hover); color: var(--aurora); }
+.btn-icon.active { background: rgba(125, 211, 252, 0.12); color: var(--aurora); border-color: rgba(125, 211, 252, 0.35); }
+
+.back-btn {
+  color: var(--mt);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(14, 18, 32, 0.6);
+  border: 1px solid var(--bd);
+  transition: all .2s;
+}
+.back-btn:hover { color: var(--fg); border-color: var(--bd-hover); }
+
+main {
+  flex: 1;
+  padding: 1.25rem 1rem 3rem;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.hidden { display: none !important; }
+
+/* Lobby Card */
+.lobby-box {
+  max-width: 460px;
+  margin: 2rem auto;
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  padding: 2rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.lobby-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--fg);
+  margin-bottom: 0.3rem;
+}
+.lobby-title span { color: var(--star); }
+.lobby-sub { color: var(--mt); font-size: 0.85rem; margin-bottom: 1.5rem; }
+
+.emoji-selector {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.emoji-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(5, 7, 14, 0.7);
+  border: 1px solid var(--bd);
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.emoji-btn:hover { border-color: var(--aurora); transform: scale(1.08); }
+.emoji-btn.selected {
+  border-color: var(--star);
+  background: rgba(245, 230, 200, 0.15);
+  box-shadow: 0 0 10px rgba(245, 230, 200, 0.3);
+}
+
+.input-group { margin-bottom: 1rem; text-align: left; }
+.input-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mt);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.form-input {
+  width: 100%;
+  background: rgba(5, 7, 14, 0.7);
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--fg);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color .2s;
+}
+.form-input:focus {
+  border-color: var(--aurora);
+  box-shadow: 0 0 10px rgba(125, 211, 252, 0.15);
+}
+
+.code-input {
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  font-size: 1.25rem;
+  letter-spacing: 4px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.btn-primary {
+  width: 100%;
+  background: linear-gradient(135deg, var(--aurora), var(--nebula));
+  color: #05070E;
+  border: none;
+  padding: 11px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all .2s;
+  box-shadow: 0 2px 10px rgba(125, 211, 252, 0.2);
+}
+.btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-secondary {
+  width: 100%;
+  background: transparent;
+  color: var(--aurora);
+  border: 1px solid rgba(125, 211, 252, 0.3);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn-secondary:hover {
+  background: rgba(125, 211, 252, 0.08);
+  border-color: rgba(125, 211, 252, 0.5);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--mt);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 1.25rem 0;
+}
+.divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--bd); }
+.divider span { padding: 0 10px; }
+
+/* In-Room Waiting Header */
+.room-header {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.room-badge { display: inline-flex; align-items: center; gap: 8px; }
+.room-code-tag {
+  background: rgba(245, 230, 200, 0.12);
+  color: var(--star);
+  border: 1px solid rgba(245, 230, 200, 0.25);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+}
+
+/* In-Lobby QR Preview Box */
+.lobby-qr-card {
+  background: rgba(5, 7, 14, 0.6);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+.lobby-qr-img {
+  width: 110px;
+  height: 110px;
+  background: #FFFFFF;
+  padding: 6px;
+  border-radius: 8px;
+  display: block;
+}
+
+.player-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 1rem 0; }
+.player-chip {
+  background: rgba(5, 7, 14, 0.6);
+  border: 1px solid var(--bd);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.player-chip.is-host { border-color: rgba(245, 230, 200, 0.4); color: var(--star); }
+.player-chip.is-me { border-color: rgba(125, 211, 252, 0.4); color: var(--aurora); }
+
+/* In-Game Flow Banner */
+.turn-guide-banner {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 0.85rem 1.25rem;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.turn-guide-banner.my-turn {
+  border-color: var(--aurora);
+  background: rgba(14, 28, 48, 0.9);
+  box-shadow: 0 0 20px rgba(125, 211, 252, 0.2);
+}
+
+.turn-guide-banner.last-turn {
+  border-color: var(--yl);
+  background: rgba(45, 30, 10, 0.9);
+  animation: pulseBanner 2s infinite;
+}
+
+@keyframes pulseBanner {
+  0%, 100% { border-color: var(--yl); }
+  50% { border-color: var(--rd); box-shadow: 0 0 25px rgba(248, 113, 113, 0.3); }
+}
+
+.guide-step-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.guide-step-desc {
+  font-size: 0.8rem;
+  color: var(--mt);
+  margin-top: 2px;
+}
+
+/* Play Area */
+.game-arena {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+@media (min-width: 900px) {
+  .game-arena {
+    grid-template-columns: 320px 1fr;
+  }
+}
+
+/* Piles Stage */
+.piles-panel {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: center;
+}
+
+.piles-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 0.5rem 0;
+}
+
+.pile-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.pile-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mt);
+}
+
+.drawn-action-box {
+  background: rgba(5, 7, 14, 0.8);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 12px;
+  margin-top: 0.5rem;
+  text-align: center;
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 3D Card Architecture */
+.card-container {
+  width: 68px;
+  height: 98px;
+  perspective: 800px;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s ease;
+}
+.card-container:hover {
+  transform: translateY(-2px);
+}
+.card-container.empty {
+  visibility: hidden;
+  cursor: default;
+}
+
+.card-inner {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.card-container.face-up .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--bd);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+.card-back {
+  background: #080C18;
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(245, 230, 200, 0.15) 0%, transparent 60%),
+    linear-gradient(135deg, rgba(125, 211, 252, 0.06), rgba(167, 139, 250, 0.06));
+  border: 1px solid #1F2844;
+  color: var(--star);
+  font-size: 1.2rem;
+  position: relative;
+  overflow: hidden;
+}
+.card-back::after {
+  content: "✦";
+  color: var(--star);
+  font-size: 1.4rem;
+  opacity: 0.7;
+}
+
+.card-front {
+  transform: rotateY(180deg);
+  background: #0B1020;
+  border: 1.5px solid var(--bd);
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  font-weight: 800;
+  font-size: 1.6rem;
+  position: relative;
+}
+
+.val-neg2, .val-neg1 {
+  border-color: var(--nebula);
+  color: var(--nebula);
+  background: rgba(167, 139, 250, 0.12);
+  text-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
+}
+.val-0 {
+  border-color: var(--aurora);
+  color: var(--aurora);
+  background: rgba(125, 211, 252, 0.12);
+  text-shadow: 0 0 10px rgba(125, 211, 252, 0.5);
+}
+.val-low {
+  border-color: var(--gn);
+  color: var(--gn);
+  background: rgba(74, 222, 128, 0.12);
+  text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+}
+.val-mid {
+  border-color: var(--yl);
+  color: var(--yl);
+  background: rgba(251, 191, 36, 0.12);
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+}
+.val-high {
+  border-color: var(--rd);
+  color: var(--rd);
+  background: rgba(248, 113, 113, 0.12);
+  text-shadow: 0 0 10px rgba(248, 113, 113, 0.5);
+}
+
+.pile-slot.pulse-target .card-container {
+  box-shadow: 0 0 18px var(--aurora);
+  border-color: var(--aurora);
+  animation: pulseCard 1.5s infinite;
+}
+
+@keyframes pulseCard {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); box-shadow: 0 0 25px var(--aurora); }
+  100% { transform: scale(1); }
+}
+
+/* Player 4x3 Grid */
+.grid-section {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.grid-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.player-grid-4x3 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  max-width: 380px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.player-grid-4x3 .card-container {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2/3;
+}
+
+/* Opponents Section */
+.opponents-section {
+  margin-top: 1.5rem;
+}
+
+.opponents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 0.75rem;
+}
+
+.opp-card {
+  background: rgba(5, 7, 14, 0.6);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 10px;
+  transition: all 0.2s;
+}
+
+.opp-card.active-turn {
+  border-color: var(--aurora);
+  background: rgba(14, 28, 48, 0.7);
+  box-shadow: 0 0 15px rgba(125, 211, 252, 0.2);
+}
+
+.opp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.opp-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.opp-score {
+  font-size: 0.78rem;
+  font-family: ui-monospace, monospace;
+  color: var(--mt);
+}
+
+.opp-grid-mini {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  width: 100%;
+}
+.opp-grid-mini .card-container {
+  width: 100%;
+  aspect-ratio: 2/3;
+  cursor: default;
+}
+.opp-grid-mini .card-face {
+  font-size: 0.75rem;
+  border-radius: 4px;
+}
+
+/* Large Screens & 4K */
+@media (min-width: 1920px) {
+  main { max-width: 1500px; }
+  .player-grid-4x3 { max-width: 460px; gap: 14px; }
+  .card-front { font-size: 2rem; }
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 7, 14, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-card {
+  background: var(--bg-deep);
+  border: 1px solid var(--bd-hover);
+  border-radius: 14px;
+  padding: 1.5rem;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.85rem;
+}
+.score-table th {
+  text-align: left;
+  padding: 8px;
+  color: var(--mt);
+  border-bottom: 1px solid var(--bd);
+  font-weight: 700;
+}
+.score-table td {
+  padding: 8px;
+  border-bottom: 1px solid #161D30;
+}
+
+.toast {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 13, 26, 0.95);
+  border: 1px solid var(--star);
+  color: var(--fg);
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  z-index: 2000;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  pointer-events: none;
+  animation: slideToast 0.3s ease;
+}
+
+@keyframes slideToast {
+  from { transform: translate(-50%, -20px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+</style>
 </head>
 <body>
-<a href="/" class="back-btn">← Hub</a>
 
-<div id="lobby">
-    <h1 style="color: var(--gold); font-size: 44px; margin-top: 5vh;">🎮 PARTY JO 🎮</h1>
-    <p style="color: #aaa; margin: 10px 0;">Choose your emoji</p>
-    <div class="emoji-picker" id="emoji-picker" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 15px 0;"></div>
-    <input type="text" id="name" placeholder="Your Name" autocomplete="off" /><br>
-    <button onclick="createRoom()" style="background: var(--success);">Create New Room</button>
-    <hr style="border-color:#333; width:200px; margin:20px auto;">
-    <input type="text" id="join-code" placeholder="4-Digit Code" autocomplete="off" /><br>
-    <button onclick="joinRoom()" style="background: #03a9f4;">Join Room</button>
-    <hr style="border-color:#333; width:200px; margin:20px auto;">
-    <button onclick="showAvailableRooms()" style="background: #f39c12;">Rejoin Active Room</button>
-</div>
+<header>
+  <div class="bc">
+    <a href="/" class="lg" title="Back to Game Hub">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L13.8 9.2L21 11L13.8 12.8L12 20L10.2 12.8L3 11L10.2 9.2L12 2Z" fill="#F5E6C8"/>
+      </svg>
+    </a>
+    <div class="tt">Party Jo <span>SKYJO</span></div>
+  </div>
+  <div class="hr">
+    <button class="btn-icon" id="sound-btn" onclick="toggleSound()" title="Toggle Sound">🔊 FX</button>
+    <a href="/" class="back-btn">← Hub</a>
+  </div>
+</header>
 
-<div id="room" class="hidden">
-    <h2 id="room-name"></h2>
-    <p style="color:#aaa; font-size:12px;">Share this code!</p>
-    <div id="player-list" style="margin: 20px 0;"></div>
-    <button onclick="openSettings()" style="background: #888; width: auto; padding: 8px 16px; margin-bottom: 10px;">⚙️ Settings</button>
-    <button id="start-btn" onclick="startGame()">Start Game</button>
-</div>
+<main>
+  <!-- QUICK-JOIN CARD (SCANNED VIA QR) -->
+  <div id="quick-join-view" class="lobby-box hidden">
+    <div style="font-size: 2.2rem; margin-bottom: 0.35rem;">🃏</div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--star); font-weight:700;">JOINING ROOM</div>
+    <div style="font-size:2rem; font-weight:800; font-family:ui-monospace, monospace; color:var(--aurora); margin:4px 0 12px;" id="quick-join-code-tag">----</div>
 
-<div id="settings-modal" class="modal hidden">
-    <div class="modal-content">
-        <h2 style="color: var(--gold);">⚙️ Game Settings</h2>
-        <div><label>Room Name</label><input type="text" id="setting-room-name" maxlength="30" placeholder="Party Jo" /></div>
-        <div><label>Target Score</label><input type="number" id="setting-target-score" min="20" max="500" value="100" /></div>
-        <div><label>Disconnect Buffer (seconds)</label><input type="number" id="setting-buffer-time" min="30" max="600" value="120" /></div>
-        <div><label>Rejoin Penalty (points)</label><input type="number" id="setting-penalty" min="0" max="100" value="25" /></div>
-        <div style="display: flex; gap: 10px; margin-top: 25px;">
-            <button onclick="closeSettings()" style="flex:1; background:#444; width:auto;">Cancel</button>
-            <button onclick="saveSettings()" style="flex:1; background:var(--accent); width:auto;">Save Changes</button>
+    <div class="input-group">
+      <label class="input-label">Avatar</label>
+      <div class="emoji-selector" id="quick-emoji-picker"></div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Your Name</label>
+      <input type="text" id="quick-player-name" class="form-input" placeholder="Your name" maxlength="20" autocomplete="off" />
+    </div>
+
+    <button class="btn-primary" onclick="submitQuickJoin()">Join Party Jo 🃏</button>
+    <button class="btn-secondary" style="margin-top:10px;" onclick="showStandardLobby()">Switch Room / Host Game</button>
+  </div>
+
+  <!-- STANDARD LOBBY SCREEN -->
+  <div id="lobby-view" class="lobby-box">
+    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🃏</div>
+    <h2 class="lobby-title">Party Jo <span>Skyjo</span></h2>
+    <p class="lobby-sub">Card elimination & column clearing for 2–8 players.</p>
+
+    <div class="input-group">
+      <label class="input-label">Avatar</label>
+      <div class="emoji-selector" id="emoji-picker"></div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Player Name</label>
+      <input type="text" id="player-name" class="form-input" placeholder="Your name" maxlength="20" autocomplete="off" />
+    </div>
+
+    <button class="btn-primary" onclick="createRoom()">Create Game Room</button>
+
+    <div class="divider"><span>OR JOIN GAME</span></div>
+
+    <div class="input-group">
+      <label class="input-label">4-Digit Room Code</label>
+      <input type="text" id="join-code" class="form-input code-input" placeholder="1234" maxlength="4" autocomplete="off" />
+    </div>
+
+    <button class="btn-secondary" onclick="joinRoom()">Join Room</button>
+  </div>
+
+  <!-- WAITING ROOM (BEFORE START) -->
+  <div id="room-view" class="hidden">
+    <div class="room-header">
+      <div class="room-badge">
+        <span style="font-size: 0.85rem; color: var(--mt); font-weight: 600;">ROOM:</span>
+        <span class="room-code-tag" id="display-room-code">----</span>
+        <button class="btn-icon" onclick="copyRoomLink()">📋 Copy</button>
+        <button class="btn-icon" onclick="showQrModal()">📱 QR</button>
+      </div>
+      <div>
+        <span id="player-count-badge" class="room-code-tag" style="color:var(--aurora); font-size:0.85rem;">1 Player</span>
+      </div>
+    </div>
+
+    <!-- In-Lobby QR Box -->
+    <div class="lobby-qr-card">
+      <img id="lobby-inline-qr" class="lobby-qr-img" src="" alt="Scan to Join" />
+      <div>
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--star); margin-bottom: 4px;">📱 Scan with Phone to Join</h4>
+        <p style="font-size: 0.8rem; color: var(--mt); line-height: 1.4;">Scan with mobile camera to enter this game lobby immediately.</p>
+      </div>
+    </div>
+
+    <div style="background:var(--card); border:1px solid var(--bd); border-radius:14px; padding:1.5rem; margin-bottom:1.25rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--star);">LOBBY PLAYERS</h3>
+        <button class="btn-icon" id="settings-open-btn" onclick="openSettingsModal()">⚙️ Settings</button>
+      </div>
+
+      <div class="player-chips" id="lobby-player-list"></div>
+
+      <div id="host-start-container" class="hidden" style="margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid var(--bd);">
+        <button id="start-game-btn" class="btn-primary" onclick="startGame()">Start Party Jo Round 🃏</button>
+      </div>
+
+      <div id="waiting-host-notice" style="color:var(--mt); font-size:0.85rem; text-align:center; padding:1rem 0;">
+        Waiting for host to start the game (Need at least 2 players)...
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVE GAME SCREEN -->
+  <div id="game-view" class="hidden">
+    <!-- Turn Guidance Banner -->
+    <div class="turn-guide-banner" id="turn-guide-banner">
+      <div>
+        <div class="guide-step-title" id="guide-title">Loading Turn...</div>
+        <div class="guide-step-desc" id="guide-desc">Follow the steps below to make your move.</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="room-code-tag" style="font-size:0.85rem;" id="round-target-badge">Target: 100</span>
+        <button class="btn-icon" onclick="showQrModal()">📱 QR</button>
+      </div>
+    </div>
+
+    <div class="game-arena">
+      <!-- Left Column: Deck & Discard Piles -->
+      <div class="piles-panel">
+        <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--star);">
+          CARD PILES
         </div>
-    </div>
-</div>
 
-<div id="available-rooms-modal" class="modal hidden">
-    <div class="modal-content">
-        <h2 style="color: var(--gold);">Active Rooms</h2>
-        <p style="color:#aaa; font-size:13px;">Click a room to see players</p>
-        <div id="rooms-list"></div>
-        <button onclick="closeModal('available-rooms-modal')" style="width:100%; margin-top:15px; background:#444;">Close</button>
-    </div>
-</div>
-
-<div id="select-player-modal" class="modal hidden">
-    <div class="modal-content">
-        <h2 id="room-select-title" style="color: var(--gold);"></h2>
-        <p style="color:#aaa; font-size:13px;">Click your inactive name to rejoin</p>
-        <div id="players-list"></div>
-        <button onclick="closeModal('select-player-modal'); showAvailableRooms();" style="width:100%; margin-top:15px; background:#444;">Back</button>
-    </div>
-</div>
-
-<div id="game" class="hidden">
-    <div id="announcements"></div>
-    <div id="pause-alert"></div>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin:5px 0;">
-        <h3 id="turn-indicator" style="margin:0; flex:1; font-size: 18px;"></h3>
-        <span id="room-code-display" style="font-family:monospace; color:var(--gold); font-size: 12px;"></span>
-    </div>
-    <div class="flex-center" style="align-items:flex-start; flex-wrap:wrap; margin-bottom:15px;">
-        <div class="area" style="flex:1; min-width:150px; padding:10px;">
-            <h4 style="margin:0 0 10px;">📊 Standings</h4>
-            <table id="scoreboard-table" style="width:100%; border-collapse:collapse; font-size:14px;"><thead><tr><th style="color:var(--gold);">Player</th><th style="color:var(--gold);">Score</th></tr></thead><tbody id="scoreboard-body"></tbody></table>
-        </div>
-        <div class="area flex-center" style="flex:2; min-width:220px; padding:15px;">
-            <div>
-                <div style="font-size:10px; color:#aaa; margin-bottom:5px;">DECK</div>
-                <div class="card-container" style="width:70px;" onclick="action('draw_deck')"><div class="card-inner"><div class="card-face card-back"></div></div></div>
-                <div id="deck-count" style="font-size:11px; color:#aaa; margin-top:5px;"></div>
+        <div class="piles-row">
+          <div class="pile-slot" id="deck-slot" onclick="action('draw_deck')">
+            <div class="pile-label">DECK (<span id="deck-count">--</span>)</div>
+            <div class="card-container" id="deck-card-visual">
+              <div class="card-inner">
+                <div class="card-face card-back"></div>
+              </div>
             </div>
-            <div><div style="font-size:10px; color:#aaa; margin-bottom:5px;">DISCARD</div><div class="card-container up" style="width:70px;" onclick="action('draw_discard')" id="discard-wrapper"></div></div>
+          </div>
+
+          <div class="pile-slot" id="discard-slot" onclick="action('draw_discard')">
+            <div class="pile-label">DISCARD</div>
+            <div class="card-container face-up" id="top-discard-visual">
+              <div class="card-inner">
+                <div class="card-face card-back"></div>
+                <div class="card-face card-front" id="discard-card-front">--</div>
+              </div>
+            </div>
+          </div>
         </div>
-    </div>
-    <div id="action-area" class="area hidden" style="border:2px solid var(--accent); padding:15px; margin-bottom:15px;">
-        <div style="display:flex; justify-content:center; align-items:center; flex-wrap:wrap;">
-            <h4 style="margin:0; margin-right:10px;">You Drew:</h4>
-            <span id="drawn-card-val" style="display:inline-flex; padding:8px 16px; border-radius:6px; border:2px solid white; font-size:28px; font-weight:bold;"></span>
+
+        <!-- Drawn Card Slot -->
+        <div id="drawn-action-container" class="drawn-action-box hidden">
+          <div style="font-size:0.75rem; color:var(--aurora); font-weight:700; margin-bottom:6px;">
+            DRAWN CARD
+          </div>
+          <div style="display:flex; justify-content:center; gap:12px; align-items:center;">
+            <div class="card-container face-up" style="cursor:default;">
+              <div class="card-inner">
+                <div class="card-face card-back"></div>
+                <div class="card-face card-front" id="drawn-card-front">--</div>
+              </div>
+            </div>
+            <div style="text-align:left;">
+              <div style="font-size:0.78rem; color:var(--fg); margin-bottom:8px;">
+                Click any slot in your grid to replace.
+              </div>
+              <button class="btn-secondary" id="discard-drawn-btn" style="padding:6px 12px; font-size:0.78rem;" onclick="action('discard_drawn')">
+                Discard & Flip Hidden
+              </button>
+            </div>
+          </div>
         </div>
-        <button id="discard-btn" onclick="action('discard_drawn')" style="margin-top:15px; width:auto; padding:10px 20px;">Discard & Flip</button>
-    </div>
-    <div id="my-area" class="area" style="padding:15px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 style="margin:0; font-size:18px;">📋 My Board</h3>
-            <div id="my-stats" style="font-size:14px; color:#aaa;"></div>
+
+        <!-- Match Scoreboard Mini -->
+        <div style="margin-top:auto; padding-top:1rem; border-top:1px solid var(--bd);">
+          <div style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:var(--mt); margin-bottom:6px;">
+            MATCH SCORES
+          </div>
+          <table class="score-table" id="scoreboard-table">
+            <thead>
+              <tr><th>PLAYER</th><th style="text-align:right;">TOTAL</th></tr>
+            </thead>
+            <tbody id="scoreboard-rows"></tbody>
+          </table>
         </div>
-        <div id="my-grid" class="grid"></div>
+      </div>
+
+      <!-- Right Column: My 4x3 Grid -->
+      <div class="grid-section">
+        <div class="grid-header">
+          <div>
+            <h3 style="font-size:1.1rem; font-weight:800; color:var(--fg); display:flex; align-items:center; gap:6px;">
+              <span id="my-player-emoji">🃏</span>
+              <span id="my-player-name">Your Grid</span>
+            </h3>
+            <div style="font-size:0.78rem; color:var(--mt);">Columns of 3 matching numbers get eliminated!</div>
+          </div>
+          <div class="room-code-tag" style="color:var(--star); font-size:0.85rem;" id="my-revealed-sum">
+            Sum: 0
+          </div>
+        </div>
+
+        <div class="player-grid-4x3" id="my-grid"></div>
+      </div>
     </div>
-    <div id="others-area" style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px;"></div>
+
+    <!-- Opponents Section -->
+    <div class="opponents-section">
+      <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--star);">
+        OPPONENT BOARDS
+      </div>
+      <div class="opponents-grid" id="opponents-container"></div>
+    </div>
+  </div>
+</main>
+
+<!-- Round Over Modal -->
+<div id="round-modal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <h3 style="font-size:1.3rem; font-weight:800; color:var(--star);" id="round-modal-title">Round Complete!</h3>
+    <p style="font-size:0.82rem; color:var(--mt); margin-top:4px;" id="round-modal-desc"></p>
+
+    <table class="score-table">
+      <thead>
+        <tr><th>Player</th><th>Round</th><th>Total</th></tr>
+      </thead>
+      <tbody id="round-scores-body"></tbody>
+    </table>
+
+    <div id="host-next-round-container" class="hidden">
+      <button class="btn-primary" onclick="nextRound()">Next Round ➔</button>
+    </div>
+    <div id="waiting-next-round" style="color:var(--mt); font-size:0.8rem; text-align:center; margin-top:10px;">
+      Waiting for host to start next round...
+    </div>
+  </div>
 </div>
 
-<div id="game-over" class="hidden">
-    <h1 id="go-title" style="font-size:36px; margin-bottom:10px;"></h1>
-    <div id="kicked-history"></div>
-    <div id="scores-container" style="max-height:50vh; overflow-y:auto; margin-bottom:20px;"></div>
-    <div id="go-actions" style="margin-top:20px;"></div>
+<!-- Settings Modal -->
+<div id="settings-modal" class="modal-overlay hidden" onclick="closeSettingsModal(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <h3 style="color:var(--star); font-size:1.15rem; font-weight:800; margin-bottom:1rem;">⚙️ Game Settings</h3>
+    
+    <div class="input-group">
+      <label class="input-label">Target Match Score</label>
+      <input type="number" id="setting-target" class="form-input" min="20" max="500" value="100" />
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Disconnect Buffer (seconds)</label>
+      <input type="number" id="setting-buffer" class="form-input" min="30" max="600" value="120" />
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Rejoin Penalty Points</label>
+      <input type="number" id="setting-penalty" class="form-input" min="0" max="100" value="25" />
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:1.5rem;">
+      <button class="btn-secondary" onclick="closeSettingsModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+    </div>
+  </div>
 </div>
 
+<!-- QR Modal -->
+<div id="qr-modal" class="modal-overlay hidden" onclick="closeQrModal(event)">
+  <div class="modal-card" style="text-align:center;" onclick="event.stopPropagation()">
+    <h3 style="color:var(--star); font-size:1.1rem; font-weight:800; margin-bottom:0.5rem;">Scan to Join Party Jo</h3>
+    <p style="color:var(--mt); font-size:0.8rem; margin-bottom:1rem;">Scan with mobile camera to enter this game.</p>
+    <div style="background:#FFFFFF; padding:12px; border-radius:10px; display:inline-block; margin-bottom:1rem;">
+      <img id="modal-qr-img" src="" width="180" height="180" alt="Room QR" />
+    </div>
+    <div style="font-family:ui-monospace, monospace; font-size:1.2rem; font-weight:700; color:var(--star);" id="qr-room-code-label">CODE: ----</div>
+    <button class="btn-secondary" style="margin-top:1rem;" onclick="closeQrModal()">Close</button>
+  </div>
+</div>
+
+<!-- Socket.io -->
 <script src="/socket.io/socket.io.js"></script>
+
 <script>
-    const socket = io('/partyjo');
-    let currentCode = null;
-    const EMOJI_LIST = ['🎲', '🃏', '🎯', '🎪', '🥳', '🎉', '🎊', '🎈', '🎁', '✨', '🌟', '💥', '🔥', '🍀', '🎮', '👾'];
-    let selectedEmoji = EMOJI_LIST[Math.floor(Math.random() * EMOJI_LIST.length)];
+/* ==================== POLARIS PARTY JO CLIENT ==================== */
+const socket = io('/partyjo');
 
-    function buildEmojiPicker() {
-        const c = document.getElementById('emoji-picker');
-        c.innerHTML = '';
-        EMOJI_LIST.forEach(e => {
-            const s = document.createElement('span');
-            s.textContent = e;
-            s.style.fontSize = '24px'; s.style.cursor = 'pointer'; s.style.padding = '5px';
-            s.style.borderRadius = '8px';
-            s.style.border = e === selectedEmoji ? '2px solid var(--gold)' : '2px solid transparent';
-            s.style.backgroundColor = e === selectedEmoji ? '#333' : 'transparent';
-            s.onclick = () => { selectedEmoji = e; buildEmojiPicker(); };
-            c.appendChild(s);
-        });
+const EMOJIS = ['🎲','🃏','🎯','🎪','🥳','🎉','🎊','🎈','🎁','✨','🌟','💥','🔥','🍀','🎮','👾'];
+let selectedEmoji = '🎲';
+let currentCode = null;
+let roomState = null;
+let soundEnabled = true;
+
+/* Web Audio Synthesizer */
+const sound = {
+  ctx: null,
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) this.ctx = new AudioCtx();
     }
-    buildEmojiPicker();
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+  },
+  play(type) {
+    if (!soundEnabled) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
 
-    function createRoom() {
-        const name = document.getElementById('name').value.trim();
-        if (!name) return showError('Enter your name');
-        socket.emit('create_room', { name, emoji: selectedEmoji });
+    if (type === 'flip') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(540, now + 0.12);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+      osc.start(now);
+      osc.stop(now + 0.15);
+    } else if (type === 'deal') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(650, now);
+      osc.frequency.exponentialRampToValueAtTime(400, now + 0.08);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    } else if (type === 'match') {
+      [440, 554.37, 659.25, 880].forEach((freq, i) => {
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.connect(g);
+        g.connect(this.ctx.destination);
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0.2, now + i * 0.08);
+        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.25);
+        o.start(now + i * 0.08);
+        o.stop(now + i * 0.08 + 0.25);
+      });
+    } else if (type === 'alarm') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.linearRampToValueAtTime(900, now + 0.2);
+      osc.frequency.linearRampToValueAtTime(600, now + 0.4);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+      osc.start(now);
+      osc.stop(now + 0.45);
     }
-    function joinRoom() {
-        const name = document.getElementById('name').value.trim();
-        const code = document.getElementById('join-code').value.trim();
-        if (!name) { showError('Enter your name'); return; }
-        if (!code || code.length !== 4 || isNaN(code)) { showError('Enter a valid 4-digit code'); return; }
-        socket.emit('join_room', { code, name, emoji: selectedEmoji });
+  }
+};
+
+function unlockMobileAudio() {
+  sound.init();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  renderEmojiPicker('emoji-picker');
+  renderEmojiPicker('quick-emoji-picker');
+
+  const params = new URLSearchParams(window.location.search);
+  const codeParam = params.get('code');
+
+  if (codeParam && codeParam.trim().length === 4) {
+    currentCode = codeParam.trim();
+    document.getElementById('quick-join-code-tag').innerText = currentCode;
+    document.getElementById('lobby-view').classList.add('hidden');
+    document.getElementById('quick-join-view').classList.remove('hidden');
+
+    const savedName = sessionStorage.getItem('polaris_pj_name');
+    if (savedName) document.getElementById('quick-player-name').value = savedName;
+  } else {
+    const savedCode = sessionStorage.getItem('polaris_pj_code');
+    const savedName = sessionStorage.getItem('polaris_pj_name');
+    if (savedCode && savedName) {
+      currentCode = savedCode;
+      socket.emit('join_room', { code: savedCode, name: savedName, emoji: selectedEmoji });
     }
-    function showAvailableRooms() { socket.emit('get_available_rooms'); }
-    function selectRoom(code) { socket.emit('get_room_players', code); }
-    function selectPlayer(playerId, name, code) { socket.emit('join_room', { code, name }); }
-    function openSettings() { document.getElementById('settings-modal').classList.remove('hidden'); }
-    function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-    function startGame() { socket.emit('start_game', currentCode); }
-    function action(t, i=null) { socket.emit('action', { code: currentCode, type: t, index: i }); }
+  }
+});
 
-    function saveSettings() {
-        socket.emit('update_settings', {
-            code: currentCode,
-            settings: {
-                roomName: document.getElementById('setting-room-name').value || 'Party Jo',
-                targetScore: parseInt(document.getElementById('setting-target-score').value) || 100,
-                bufferTimeSec: parseInt(document.getElementById('setting-buffer-time').value) || 120,
-                rejoinPenalty: parseInt(document.getElementById('setting-penalty').value) || 25
-            }
-        });
-        closeSettings();
-    }
+function renderEmojiPicker(elementId) {
+  const picker = document.getElementById(elementId);
+  if (!picker) return;
+  picker.innerHTML = EMOJIS.map(e => `
+    <button class="emoji-btn ${e === selectedEmoji ? 'selected' : ''}" onclick="selectEmoji('${e}')">${e}</button>
+  `).join('');
+}
 
-    function showError(m) {
-        const e = document.createElement('div');
-        e.style.cssText = 'position:fixed; top:10px; right:10px; background:var(--accent); color:white; padding:15px; border-radius:8px; z-index:1001;';
-        e.innerText = m; document.body.appendChild(e); setTimeout(() => e.remove(), 3000);
-    }
-    function showAnnouncement(msg) {
-        const a = document.getElementById('announcements');
-        const el = document.createElement('div'); el.className = 'announcement'; el.innerText = msg;
-        a.appendChild(el); setTimeout(() => el.remove(), 4000);
-    }
-    function getCardClass(v) { if(v===-2) return 'val-neg2'; if(v===-1) return 'val-neg1'; if(v===0) return 'val-0'; if(v>=1&&v<=4) return 'val-low'; if(v>=5&&v<=8) return 'val-mid'; if(v>=9) return 'val-high'; return ''; }
-    function createCardHTML(val, isUp, onClick="") {
-        if(val===null) return '<div style="border:2px dashed #555; border-radius:6px; width:100%; aspect-ratio:2/3;"></div>';
-        const cls = getCardClass(val); const up = isUp?'up':''; const disp = (val===6||val===9)?`<u>${val}</u>`:val;
-        return `<div class="card-container ${up}" onclick="${onClick}"><div class="card-inner"><div class="card-face card-back"></div><div class="card-face card-front ${cls}">${disp}</div></div></div>`;
-    }
-    function getVisibleSum(p) { return p.grid.reduce((s,v,i)=>s+(p.visible[i]&&v!==null?v:0),0); }
-    function formatTime(sec) { const m = Math.floor(sec/60); const s = sec%60; return (m>0?m+'m ':'') + s+'s'; }
+function selectEmoji(e) {
+  selectedEmoji = e;
+  renderEmojiPicker('emoji-picker');
+  renderEmojiPicker('quick-emoji-picker');
+}
 
-    socket.on('available_rooms', (rooms) => {
-        const list = document.getElementById('rooms-list');
-        if (!rooms.length) { list.innerHTML = '<p style="color:#aaa;">No active rooms available</p>'; }
-        else { list.innerHTML = rooms.map(r => `<div class="room-item" onclick="selectRoom('${r.code}')"><strong>${r.roomName}</strong><br><span style="color:#aaa; font-size:12px;">Code: ${r.code} | ${r.playerCount} players | ${r.status}</span></div>`).join(''); }
-        document.getElementById('available-rooms-modal').classList.remove('hidden');
-    });
+function submitQuickJoin() {
+  const name = document.getElementById('quick-player-name').value.trim();
+  if (!name) return showToast('Please enter your name');
+  unlockMobileAudio();
+  sessionStorage.setItem('polaris_pj_name', name);
+  sessionStorage.setItem('polaris_pj_code', currentCode);
+  socket.emit('join_room', { code: currentCode, name, emoji: selectedEmoji });
+}
 
-    socket.on('room_players', (room) => {
-        document.getElementById('available-rooms-modal').classList.add('hidden');
-        document.getElementById('room-select-title').innerText = room.roomName;
-        const list = document.getElementById('players-list');
-        list.innerHTML = room.players.map(p => {
-            let statusClass = 'status-active', statusTxt = 'ACTIVE', clickable = false;
-            if (p.kicked_pending) { statusClass = 'status-kicked'; statusTxt = 'KICKED'; }
-            else if (p.disconnected) { statusClass = 'status-inactive'; statusTxt = 'INACTIVE'; clickable = true; }
-            return `<div class="player-item" onclick="${clickable ? `selectPlayer('${p.id}', '${p.name}', '${room.code}')` : ''}" style="${clickable?'cursor:pointer;':'opacity:0.6;'}"><div style="text-align:left;"><strong>${p.emoji} ${p.name}</strong><br><span style="color:#aaa; font-size:12px;">Score: ${p.score}</span></div><span class="status-badge ${statusClass}">${statusTxt}</span></div>`;
-        }).join('');
-        document.getElementById('select-player-modal').classList.remove('hidden');
-    });
+function showStandardLobby() {
+  document.getElementById('quick-join-view').classList.add('hidden');
+  document.getElementById('lobby-view').classList.remove('hidden');
+}
 
-    socket.on('announcement', (msg) => showAnnouncement(msg));
+function createRoom() {
+  const name = document.getElementById('player-name').value.trim();
+  if (!name) return showToast('Please enter your name');
+  unlockMobileAudio();
+  sessionStorage.setItem('polaris_pj_name', name);
+  socket.emit('create_room', { name, emoji: selectedEmoji, roomName: 'Party Jo' });
+}
 
-    socket.on('state', (state) => {
-        currentCode = state.code;
-        ['lobby', 'room', 'available-rooms-modal', 'select-player-modal', 'game', 'game-over'].forEach(id => document.getElementById(id).classList.add('hidden'));
+function joinRoom() {
+  const name = document.getElementById('player-name').value.trim();
+  const code = document.getElementById('join-code').value.trim();
+  if (!name) return showToast('Please enter your name');
+  if (!code || code.length !== 4) return showToast('Enter 4-digit code');
+  unlockMobileAudio();
+  currentCode = code;
+  sessionStorage.setItem('polaris_pj_name', name);
+  sessionStorage.setItem('polaris_pj_code', code);
+  socket.emit('join_room', { code, name, emoji: selectedEmoji });
+}
 
-        if (state.gamePhase === 'LOBBY') {
-            document.getElementById('lobby').classList.remove('hidden');
-            document.getElementById('room').classList.remove('hidden');
-            document.getElementById('room-name').innerText = `${state.roomName} - Code: ${state.code}`;
-            const players = Object.values(state.players).filter(p => !p.kicked_pending);
-            document.getElementById('player-list').innerHTML = players.map(p => `<div style="background:#333; padding:10px; margin:5px; border-radius:5px;">${p.emoji} ${p.name}${state.hostId === p.id ? ' 👑' : ''}</div>`).join('');
-            document.getElementById('start-btn').disabled = players.length < 2;
-            document.getElementById('setting-room-name').value = state.roomName;
-            document.getElementById('setting-target-score').value = state.settings.targetScore;
-            document.getElementById('setting-buffer-time').value = state.settings.bufferTimeSec;
-            document.getElementById('setting-penalty').value = state.settings.rejoinPenalty;
-        } else if (['ROUND_OVER', 'MATCH_OVER', 'ABANDONED'].includes(state.gamePhase)) {
-            document.getElementById('game-over').classList.remove('hidden');
-            const goTitle = document.getElementById('go-title');
-            if (state.gamePhase === 'ABANDONED') { goTitle.innerText = '❌ GAME ABANDONED'; goTitle.style.color = 'var(--accent)'; }
-            else if (state.gamePhase === 'MATCH_OVER') { goTitle.innerText = '🎉 MATCH OVER 🎉'; goTitle.style.color = 'var(--gold)'; }
-            else { goTitle.innerText = '🏆 ROUND OVER 🏆'; goTitle.style.color = 'var(--gold)'; }
+function startGame() {
+  if (!currentCode) return;
+  socket.emit('start_game', currentCode);
+}
 
-            if (state.kickedHistory?.length) {
-                document.getElementById('kicked-history').innerHTML = `<div class="area" style="background:rgba(192,57,43,0.2); border-left:4px solid #c0392b; text-align:left;"><strong style="color:#c0392b;">⚠️ Kicked Players:</strong><br>` + state.kickedHistory.map(k => `<span style="font-size:12px; color:#aaa;">${k.name}</span>`).join(', ') + '</div>';
-            } else { document.getElementById('kicked-history').innerHTML = ''; }
+function nextRound() {
+  if (!currentCode) return;
+  socket.emit('next_round', currentCode);
+}
 
-            let scores = document.getElementById('scores-container');
-            scores.innerHTML = '';
-            if (state.gamePhase !== 'ABANDONED') {
-                let sorted = Object.keys(state.globalScores).sort((a,b)=>state.globalScores[b]-state.globalScores[a]);
-                sorted.forEach((name, idx) => {
-                    let pid = Object.keys(state.players).find(k=>state.players[k]?.name===name);
-                    let rs = state.finalScores?.[pid] || { finalScore:0 };
-                    scores.innerHTML += `<div class="area" style="${idx===0?'border:2px solid var(--gold)':''}"><div style="display:flex; justify-content:space-between; align-items:center;"><div style="text-align:left;"><strong>#${idx+1} ${state.players[pid]?.emoji||''} ${name}</strong></div><div style="text-align:right;"><span style="font-size:12px; color:#aaa;">Round: ${rs.finalScore}</span><br><strong style="color:var(--gold); font-size:18px;">Total: ${state.globalScores[name]}</strong></div></div></div>`;
-                });
-            }
-            if (state.gamePhase === 'MATCH_OVER') {
-                const winner = Object.keys(state.globalScores).sort((a,b)=>state.globalScores[b]-state.globalScores[a])[0];
-                document.getElementById('go-actions').innerHTML = `<h2 style="color:var(--gold);">🥇 ${winner} Wins!</h2><button onclick="socket.emit('start_game', currentCode)" style="width:auto; padding:10px 30px;">Play Again</button>`;
-            } else if (state.gamePhase === 'ABANDONED') {
-                document.getElementById('go-actions').innerHTML = `<p style="color:var(--accent);">Not enough players to continue.</p><button onclick="location.reload()" style="width:auto; padding:10px 30px;">Return to Lobby</button>`;
-            } else {
-                document.getElementById('go-actions').innerHTML = `<button onclick="socket.emit('next_round', currentCode)" style="width:auto; padding:10px 30px;">Next Round</button>`;
-            }
-        } else {
-            document.getElementById('game').classList.remove('hidden');
-            const pauseAlert = document.getElementById('pause-alert');
-            if (state.pausedBy) {
-                const pausedPlayer = state.players[state.pausedBy.playerId];
-                const elapsed = Date.now() - (pausedPlayer.disconnectTime || Date.now());
-                const remaining = Math.max(0, (state.settings.bufferTimeSec||120)*1000 - elapsed);
-                const remainingSec = Math.ceil(remaining/1000);
-                const isHost = state.hostId === socket.id;
-                pauseAlert.innerHTML = `<div class="pause-banner"><span>⏸️ GAME PAUSED – waiting for ${pausedPlayer?.emoji||''} ${pausedPlayer?.name||'Player'} (${formatTime(remainingSec)} remaining)</span><div style="display:flex; gap:5px;">${isHost ? `<button onclick="socket.emit('extend_buffer', {code:'${state.code}', playerId:'${state.pausedBy.playerId}', additionalSec:60})">+60s</button>` : ''}${isHost ? `<button onclick="socket.emit('kick_player', {code:'${state.code}', playerId:'${state.pausedBy.playerId}'})">Kick</button>` : ''}</div></div>`;
-                pauseAlert.classList.remove('hidden');
-            } else { pauseAlert.classList.add('hidden'); }
+function action(type, index = null) {
+  if (!currentCode) return;
+  sound.play('flip');
+  socket.emit('action', { code: currentCode, type, index });
+}
 
-            document.getElementById('room-code-display').innerText = `${state.roomName} – ${state.code}`;
-            const sb = document.getElementById('scoreboard-body');
-            sb.innerHTML = '';
-            Object.values(state.players).filter(p => !p.kicked_pending).forEach(p => {
-                let score = state.globalScores[p.name] || 0;
-                let danger = score >= (state.settings.targetScore - 20) ? 'color:var(--accent);' : '';
-                sb.innerHTML += `<tr><td>${p.emoji} ${p.name}</td><td style="${danger}">${score}</td></tr>`;
-            });
+function getCardColorClass(val) {
+  if (val === -2 || val === -1) return 'val-neg2';
+  if (val === 0) return 'val-0';
+  if (val >= 1 && val <= 4) return 'val-low';
+  if (val >= 5 && val <= 8) return 'val-mid';
+  return 'val-high';
+}
 
-            const turnInd = document.getElementById('turn-indicator');
-            const myArea = document.getElementById('my-area');
-            const myPlayer = state.players[socket.id];
-            if (state.gamePhase === 'SETUP') {
-                let count = myPlayer?.visible?.filter(Boolean).length || 0;
-                turnInd.innerHTML = `SETUP: FLIP ${2-count} MORE CARD${2-count!==1?'S':''}`;
-                turnInd.style.color = 'var(--accent)';
-                if(myArea) myArea.classList.add('active-turn');
-            } else if (state.gamePhase === 'PAUSED') {
-                turnInd.innerHTML = '⏸️ GAME PAUSED'; turnInd.style.color = 'var(--accent)';
-            } else {
-                let isMyTurn = state.playerOrder[state.turnIndex] === socket.id;
-                turnInd.innerHTML = (state.gamePhase==='LAST_TURN'?'⚠️ LAST TURN! ':'') + (isMyTurn?'🎯 YOUR TURN!':`${state.players[state.playerOrder[state.turnIndex]]?.emoji||''} ${state.players[state.playerOrder[state.turnIndex]]?.name||'Unknown'}'s Turn`);
-                turnInd.style.color = isMyTurn ? 'var(--gold)' : 'white';
-                if(myArea) myArea.classList.toggle('active-turn', isMyTurn);
-            }
+function createCardHTML(val, isVisible, onClickStr = '') {
+  if (val === null) {
+    return `<div class="card-container empty"></div>`;
+  }
+  const colorCls = isVisible ? getCardColorClass(val) : '';
+  const displayVal = (val === 6 || val === 9) ? `<u>${val}</u>` : val;
 
-            const discard = document.getElementById('discard-wrapper');
-            let topD = state.discardPile[state.discardPile.length-1];
-            discard.innerHTML = topD !== undefined ? createCardHTML(topD, true, "action('draw_discard')") : '<div class="card-inner"><div class="card-face card-front" style="background:#555;"></div></div>';
-            document.getElementById('deck-count').innerText = `Cards: ${state.deckCount || 0}`;
+  return `
+    <div class="card-container ${isVisible ? 'face-up' : ''}" ${onClickStr ? `onclick="${onClickStr}"` : ''}>
+      <div class="card-inner">
+        <div class="card-face card-back"></div>
+        <div class="card-face card-front ${colorCls}">${isVisible ? displayVal : ''}</div>
+      </div>
+    </div>
+  `;
+}
 
-            const actionArea = document.getElementById('action-area');
-            if (state.playerOrder[state.turnIndex] === socket.id && state.currentAction && state.gamePhase !== 'PAUSED') {
-                actionArea.classList.remove('hidden');
-                let vs = document.getElementById('drawn-card-val');
-                if (state.currentAction.type.includes('drawn')) {
-                    let c = state.currentAction.card;
-                    vs.innerHTML = (c===6||c===9)?`<u>${c}</u>`:c;
-                    vs.className = getCardClass(c);
-                    document.getElementById('discard-btn').classList.toggle('hidden', state.currentAction.type !== 'drawn_deck');
-                }
-            } else { actionArea.classList.add('hidden'); }
+function getVisibleSum(player) {
+  if (!player || !player.grid) return 0;
+  let sum = 0;
+  player.grid.forEach((v, i) => {
+    if (v !== null && player.visible && player.visible[i]) sum += v;
+  });
+  return sum;
+}
 
-            if (myPlayer && !myPlayer.kicked_pending) {
-                document.getElementById('my-stats').innerHTML = `Sum: <b>${getVisibleSum(myPlayer)}</b>`;
-                document.getElementById('my-grid').innerHTML = myPlayer.grid.map((v,i)=>createCardHTML(v, myPlayer.visible[i], `action('grid_click',${i})`)).join('');
-            }
-            const others = document.getElementById('others-area');
-            others.innerHTML = '';
-            state.playerOrder.forEach(id => {
-                if (id === socket.id) return;
-                let p = state.players[id];
-                if (!p || p.kicked_pending) return;
-                let isTurn = state.playerOrder[state.turnIndex] === id && state.gamePhase !== 'SETUP' && state.gamePhase !== 'PAUSED';
-                others.innerHTML += `<div class="area opp-area" style="${isTurn?'box-shadow:0 0 15px var(--gold); border:2px solid var(--gold)':''}"><h4 style="margin:0; font-size:14px; color:${isTurn?'var(--gold)':'white'}">${p.emoji} ${p.name}</h4><div style="font-size:10px; color:#aaa; margin-bottom:10px;">Sum: ${getVisibleSum(p)}</div><div class="grid opp-grid">${p.grid.map((v,i)=>createCardHTML(v, p.visible[i], '')).join('')}</div></div>`;
-            });
+socket.on('state', (room) => {
+  roomState = room;
+  currentCode = room.code;
+  sessionStorage.setItem('polaris_pj_code', room.code);
+  const isHost = room.hostId === socket.id;
+
+  document.getElementById('display-room-code').innerText = room.code;
+  document.getElementById('qr-room-code-label').innerText = `CODE: ${room.code}`;
+
+  const joinUrl = `${window.location.origin}/partyjo?code=${room.code}`;
+  const qrSrc = `/api/qr?text=${encodeURIComponent(joinUrl)}`;
+  const inlineQr = document.getElementById('lobby-inline-qr');
+  if (inlineQr) inlineQr.src = qrSrc;
+  const modalQr = document.getElementById('modal-qr-img');
+  if (modalQr) modalQr.src = qrSrc;
+
+  if (room.gamePhase === 'LOBBY') {
+    document.getElementById('quick-join-view').classList.add('hidden');
+    document.getElementById('lobby-view').classList.add('hidden');
+    document.getElementById('room-view').classList.remove('hidden');
+    document.getElementById('game-view').classList.add('hidden');
+    document.getElementById('round-modal').classList.add('hidden');
+
+    const players = Object.values(room.players);
+    document.getElementById('player-count-badge').innerText = `${players.length} Player${players.length > 1 ? 's' : ''}`;
+    
+    document.getElementById('lobby-player-list').innerHTML = players.map(p => {
+      let cls = 'player-chip';
+      if (p.id === room.hostId) cls += ' is-host';
+      if (p.id === socket.id) cls += ' is-me';
+      return `<div class="${cls}">
+        ${p.emoji || '👤'} ${p.name} ${p.id === room.hostId ? '⭐' : ''}
+      </div>`;
+    }).join('');
+
+    document.getElementById('host-start-container').classList.toggle('hidden', !isHost || players.length < 2);
+    document.getElementById('waiting-host-notice').classList.toggle('hidden', isHost && players.length >= 2);
+
+  } else if (['SETUP', 'PLAYING', 'LAST_TURN', 'ROUND_OVER', 'MATCH_OVER', 'PAUSED'].includes(room.gamePhase)) {
+    document.getElementById('quick-join-view').classList.add('hidden');
+    document.getElementById('lobby-view').classList.add('hidden');
+    document.getElementById('room-view').classList.add('hidden');
+    document.getElementById('game-view').classList.remove('hidden');
+
+    const isMyTurn = room.playerOrder[room.turnIndex] === socket.id;
+    const myPlayer = room.players[socket.id];
+    const banner = document.getElementById('turn-guide-banner');
+    const guideTitle = document.getElementById('guide-title');
+    const guideDesc = document.getElementById('guide-desc');
+
+    banner.classList.toggle('my-turn', isMyTurn);
+    banner.classList.toggle('last-turn', room.gamePhase === 'LAST_TURN');
+    document.getElementById('round-target-badge').innerText = `Target: ${room.settings?.targetScore || 100}`;
+
+    if (room.gamePhase === 'SETUP') {
+      const flipsDone = myPlayer?.visible?.filter(Boolean).length || 0;
+      guideTitle.innerText = `Initial Setup (${flipsDone}/2 Revealed)`;
+      guideDesc.innerText = flipsDone < 2 ? 'Click any 2 hidden cards to reveal your starting hand.' : 'Waiting for others to flip...';
+    } else if (room.gamePhase === 'PAUSED') {
+      guideTitle.innerText = `⏸️ Game Paused`;
+      guideDesc.innerText = `Waiting for player to rejoin...`;
+    } else if (room.gamePhase === 'LAST_TURN') {
+      const trigger = room.players[room.triggerPlayer];
+      guideTitle.innerText = `⚠️ FINAL ROUND TRIGGERED!`;
+      guideDesc.innerText = isMyTurn ? `Your final move! Make it count.` : `${trigger?.name || 'A player'} flipped all cards! 1 final turn remaining.`;
+    } else {
+      if (isMyTurn) {
+        if (!room.currentAction) {
+          guideTitle.innerText = `🎯 YOUR TURN — STEP 1`;
+          guideDesc.innerText = `Draw from Deck (hidden) or take Discard (visible).`;
+        } else if (room.currentAction.type === 'drawn_deck') {
+          guideTitle.innerText = `🎯 YOUR TURN — STEP 2`;
+          guideDesc.innerText = `Click a grid slot to swap, or Discard to flip a hidden card.`;
+        } else if (room.currentAction.type === 'drawn_discard') {
+          guideTitle.innerText = `🎯 YOUR TURN — STEP 2`;
+          guideDesc.innerText = `Click a grid slot to replace with drawn card.`;
+        } else if (room.currentAction.type === 'must_flip') {
+          guideTitle.innerText = `🎯 YOUR TURN — STEP 3`;
+          guideDesc.innerText = `Click any hidden card in your grid to reveal it.`;
         }
-    });
-    socket.on('error', (msg) => showError(msg));
+      } else {
+        const activePlayer = room.players[room.playerOrder[room.turnIndex]];
+        guideTitle.innerText = `${activePlayer?.emoji || '👤'} ${activePlayer?.name || 'Opponent'}'s Turn`;
+        guideDesc.innerText = `Waiting for opponent to complete move...`;
+      }
+    }
+
+    document.getElementById('deck-count').innerText = room.deckCount ?? (room.deck ? room.deck.length : '--');
+    const topDiscard = room.discardPile ? room.discardPile[room.discardPile.length - 1] : null;
+    const discardFront = document.getElementById('discard-card-front');
+    const discardVisual = document.getElementById('top-discard-visual');
+
+    if (topDiscard !== null && topDiscard !== undefined) {
+      discardFront.className = `card-face card-front ${getCardColorClass(topDiscard)}`;
+      discardFront.innerHTML = (topDiscard === 6 || topDiscard === 9) ? `<u>${topDiscard}</u>` : topDiscard;
+      discardVisual.classList.remove('empty');
+    } else {
+      discardVisual.classList.add('empty');
+    }
+
+    const drawnContainer = document.getElementById('drawn-action-container');
+    const drawnFront = document.getElementById('drawn-card-front');
+    const discardDrawnBtn = document.getElementById('discard-drawn-btn');
+
+    if (isMyTurn && room.currentAction && room.currentAction.card !== undefined) {
+      drawnContainer.classList.remove('hidden');
+      const val = room.currentAction.card;
+      drawnFront.className = `card-face card-front ${getCardColorClass(val)}`;
+      drawnFront.innerHTML = (val === 6 || val === 9) ? `<u>${val}</u>` : val;
+      discardDrawnBtn.classList.toggle('hidden', room.currentAction.type !== 'drawn_deck');
+    } else {
+      drawnContainer.classList.add('hidden');
+    }
+
+    document.getElementById('deck-slot').classList.toggle('pulse-target', isMyTurn && !room.currentAction && room.gamePhase === 'PLAYING');
+    document.getElementById('discard-slot').classList.toggle('pulse-target', isMyTurn && !room.currentAction && room.gamePhase === 'PLAYING');
+
+    if (myPlayer) {
+      document.getElementById('my-player-emoji').innerText = myPlayer.emoji || '🃏';
+      document.getElementById('my-player-name').innerText = `${myPlayer.name} (You)`;
+      document.getElementById('my-revealed-sum').innerText = `Revealed: ${getVisibleSum(myPlayer)}`;
+
+      const gridEl = document.getElementById('my-grid');
+      gridEl.innerHTML = myPlayer.grid.map((val, idx) => {
+        const isVis = myPlayer.visible && myPlayer.visible[idx];
+        return createCardHTML(val, isVis, `action('grid_click', ${idx})`);
+      }).join('');
+    }
+
+    const sbRows = document.getElementById('scoreboard-rows');
+    sbRows.innerHTML = room.playerOrder.map(id => {
+      const p = room.players[id];
+      if (!p) return '';
+      const score = room.globalScores[p.name] || 0;
+      const isLead = score >= (room.settings?.targetScore || 100) - 20;
+      return `<tr>
+        <td>${p.emoji || '👤'} ${p.name}</td>
+        <td style="text-align:right; font-weight:700; font-family:monospace; color:${isLead ? 'var(--rd)' : 'var(--fg)'};">${score}</td>
+      </tr>`;
+    }).join('');
+
+    const oppContainer = document.getElementById('opponents-container');
+    oppContainer.innerHTML = room.playerOrder.filter(id => id !== socket.id).map(id => {
+      const p = room.players[id];
+      if (!p) return '';
+      const isActiveOpp = room.playerOrder[room.turnIndex] === id;
+      return `
+        <div class="opp-card ${isActiveOpp ? 'active-turn' : ''}">
+          <div class="opp-header">
+            <div class="opp-name">${p.emoji || '👤'} ${p.name}</div>
+            <div class="opp-score">Revealed: ${getVisibleSum(p)}</div>
+          </div>
+          <div class="opp-grid-mini">
+            ${p.grid.map((val, idx) => createCardHTML(val, p.visible && p.visible[idx], '')).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    if (room.gamePhase === 'ROUND_OVER' || room.gamePhase === 'MATCH_OVER') {
+      const roundModal = document.getElementById('round-modal');
+      roundModal.classList.remove('hidden');
+      document.getElementById('round-modal-title').innerText = room.gamePhase === 'MATCH_OVER' ? '🏆 MATCH FINISHED!' : '🎉 ROUND OVER';
+      document.getElementById('round-modal-desc').innerText = room.gamePhase === 'MATCH_OVER' ? 'Final scores:' : 'Round scores calculated:';
+
+      const scoresBody = document.getElementById('round-scores-body');
+      scoresBody.innerHTML = room.playerOrder.map(id => {
+        const p = room.players[id];
+        const res = room.finalScores ? room.finalScores[id] : null;
+        if (!p || !res) return '';
+        return `<tr>
+          <td>${p.emoji || ''} ${p.name} ${res.doubled ? '⚠️ (Doubled)' : ''}</td>
+          <td style="font-family:monospace; font-weight:700;">+${res.finalScore}</td>
+          <td style="font-family:monospace; font-weight:700; color:var(--star);">${room.globalScores[p.name] || 0}</td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('host-next-round-container').classList.toggle('hidden', !isHost);
+      document.getElementById('waiting-next-round').classList.toggle('hidden', isHost);
+    } else {
+      document.getElementById('round-modal').classList.add('hidden');
+    }
+  }
+});
+
+socket.on('announcement', (msg) => {
+  if (msg.includes('LAST TURN')) sound.play('alarm');
+  showToast(msg);
+});
+
+socket.on('error', (err) => {
+  showToast(`Error: ${err}`);
+});
+
+function openSettingsModal() {
+  if (!roomState) return;
+  document.getElementById('setting-target').value = roomState.settings?.targetScore || 100;
+  document.getElementById('setting-buffer').value = roomState.settings?.bufferTimeSec || 120;
+  document.getElementById('setting-penalty').value = roomState.settings?.rejoinPenalty || 25;
+  document.getElementById('settings-modal').classList.remove('hidden');
+}
+
+function closeSettingsModal() {
+  document.getElementById('settings-modal').classList.add('hidden');
+}
+
+function saveSettings() {
+  const target = parseInt(document.getElementById('setting-target').value) || 100;
+  const buffer = parseInt(document.getElementById('setting-buffer').value) || 120;
+  const penalty = parseInt(document.getElementById('setting-penalty').value) || 25;
+  socket.emit('update_settings', {
+    code: currentCode,
+    settings: { targetScore: target, bufferTimeSec: buffer, rejoinPenalty: penalty }
+  });
+  closeSettingsModal();
+}
+
+function copyRoomLink() {
+  const url = `${window.location.origin}/partyjo?code=${currentCode}`;
+  navigator.clipboard.writeText(url).then(() => showToast('📋 Link copied to clipboard!'));
+}
+
+function showQrModal() {
+  if (!currentCode) return;
+  document.getElementById('qr-modal').classList.remove('hidden');
+}
+
+function closeQrModal(e) {
+  document.getElementById('qr-modal').classList.add('hidden');
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  const btn = document.getElementById('sound-btn');
+  btn.innerText = `🔊 FX: ${soundEnabled ? 'ON' : 'OFF'}`;
+  btn.classList.toggle('active', soundEnabled);
+}
+
+function showToast(msg) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerText = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
 </script>
 </body>
 </html>

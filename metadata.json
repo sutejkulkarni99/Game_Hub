@@ -1,0 +1,8 @@
+{
+  "name": "Game Hub - Polaris Gaming Node",
+  "description": "Multiplayer homelab gaming hub featuring Party Jo (Skyjo-style card elimination) and Tambola (Indian Housie with automated caller, master 90-ball board, and TV mode) styled in the Polaris design system.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

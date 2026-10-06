@@ -30,7 +30,7 @@ function reshuffleDiscardIntoDeck(room) {
 
 function drawCardFromDeck(room) {
     if (room.deck.length === 0) reshuffleDiscardIntoDeck(room);
-    if (room.deck.length === 0) return null;
+    if (room.deck.length === 0) room.deck = initDeck();
     return room.deck.pop();
 }
 
@@ -71,7 +71,7 @@ function calculateScores(room) {
         let validPlayers = room.playerOrder.filter(id => id !== room.triggerPlayer && room.finalScores[id]);
         if (validPlayers.length > 0) {
             let lowestOther = Math.min(...validPlayers.map(id => room.finalScores[id].rawScore));
-            if (lowestOther < triggerScore && triggerScore > 0) {
+            if (lowestOther <= triggerScore && triggerScore > 0) {
                 room.finalScores[room.triggerPlayer].finalScore = triggerScore * 2;
                 room.finalScores[room.triggerPlayer].doubled = true;
             }
@@ -179,7 +179,21 @@ module.exports = {
     joinRoom: (code, id, name, emoji = '🎲') => {
         let room = rooms[code];
         if (!room || room.gamePhase !== 'LOBBY') return null;
-        if (Object.values(room.players).some(p => p.name.toLowerCase() === name.toLowerCase())) return null;
+
+        const existingId = Object.keys(room.players).find(pid => room.players[pid].name.toLowerCase() === name.toLowerCase());
+        if (existingId) {
+            let p = room.players[existingId];
+            delete room.players[existingId];
+            p.id = id;
+            p.disconnected = false;
+            p.emoji = emoji || p.emoji;
+            p.status = 'active';
+            room.players[id] = p;
+            room.playerOrder = room.playerOrder.map(pid => pid === existingId ? id : pid);
+            if (room.hostId === existingId) room.hostId = id;
+            return room;
+        }
+
         if (getActivePlayers(room).length >= 8) return null;
 
         room.players[id] = {

@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const partyJo = require('./gameLogic');
 const tambola = require('./tambolaLogic');
+const QRCode = require('qrcode');
 
 const app = express();
 const server = http.createServer(app);
@@ -11,12 +12,27 @@ const io = new Server(server, {
     transports: ['websocket', 'polling']
 });
 
-const PORT = process.env.PORT || 8085;
+const PORT = (process.env.PORT && process.env.PORT !== '8080') ? process.env.PORT : 3000;
 app.use(express.static('public'));
 
 app.get('/', (req, res) => res.sendFile(__dirname + '/public/index.html'));
 app.get('/partyjo', (req, res) => res.sendFile(__dirname + '/public/partyjo.html'));
 app.get('/tambola', (req, res) => res.sendFile(__dirname + '/public/tambola.html'));
+
+app.get('/api/qr', async (req, res) => {
+    try {
+        const text = req.query.text;
+        if (!text) return res.status(400).send('Missing text parameter');
+        const svg = await QRCode.toString(text, {
+            type: 'svg',
+            margin: 1,
+            color: { dark: '#05070E', light: '#FFFFFF' }
+        });
+        res.type('image/svg+xml').send(svg);
+    } catch (err) {
+        res.status(500).send('Error generating QR code');
+    }
+});
 
 // ==================== PARTY JO NAMESPACE ====================
 const pjNsp = io.of('/partyjo');
@@ -204,6 +220,7 @@ pjNsp.on('connection', (socket) => {
 // ==================== TAMBOLA NAMESPACE ======================
 const tbNsp = io.of('/tambola');
 const tbUserRooms = {};
+const tbAutoTimers = {};
 
 tbNsp.on('connection', (socket) => {
     console.log(`[TAMBOLA] ${socket.id}`);
@@ -241,6 +258,55 @@ tbNsp.on('connection', (socket) => {
         tbNsp.to(code).emit('announcement', 'Game started!');
     });
 
+    socket.on('reset_game', (code) => {
+        const room = tambola.getRoom(code);
+        if (!room || room.hostId !== socket.id) return;
+        if (tbAutoTimers[code]) {
+            clearInterval(tbAutoTimers[code]);
+            delete tbAutoTimers[code];
+        }
+        room.autoCall = false;
+        tambola.restartGame(room);
+        tbNsp.to(code).emit('state', room);
+        tbNsp.to(code).emit('announcement', 'New game started! Fresh tickets issued.');
+    });
+
+    socket.on('set_auto_call', ({ code, enabled, intervalSec }) => {
+        const room = tambola.getRoom(code);
+        if (!room || room.hostId !== socket.id) return;
+        if (tbAutoTimers[code]) {
+            clearInterval(tbAutoTimers[code]);
+            delete tbAutoTimers[code];
+        }
+        room.autoCall = !!enabled;
+        room.callIntervalSec = Math.max(2, Math.min(30, parseInt(intervalSec) || 5));
+
+        if (room.autoCall && room.gamePhase === 'PLAYING') {
+            tbAutoTimers[code] = setInterval(() => {
+                const r = tambola.getRoom(code);
+                if (!r || r.gamePhase !== 'PLAYING' || !r.autoCall) {
+                    if (tbAutoTimers[code]) {
+                        clearInterval(tbAutoTimers[code]);
+                        delete tbAutoTimers[code];
+                    }
+                    return;
+                }
+                const num = tambola.callNumber(r);
+                if (num !== null) {
+                    tbNsp.to(code).emit('number_called', num, r.calledNumbers, r.remainingNumbers.length);
+                    tbNsp.to(code).emit('state', r);
+                } else {
+                    clearInterval(tbAutoTimers[code]);
+                    delete tbAutoTimers[code];
+                    r.autoCall = false;
+                    tbNsp.to(code).emit('announcement', '🏁 All 90 numbers have been called!');
+                    tbNsp.to(code).emit('state', r);
+                }
+            }, room.callIntervalSec * 1000);
+        }
+        tbNsp.to(code).emit('state', room);
+    });
+
     socket.on('call_number', (code) => {
         const room = tambola.getRoom(code);
         if (!room || room.hostId !== socket.id) return;
@@ -248,6 +314,37 @@ tbNsp.on('connection', (socket) => {
         if (num !== null) {
             tbNsp.to(code).emit('number_called', num, room.calledNumbers, room.remainingNumbers.length);
             tbNsp.to(code).emit('state', room);
+        } else {
+            if (tbAutoTimers[code]) {
+                clearInterval(tbAutoTimers[code]);
+                delete tbAutoTimers[code];
+            }
+            room.autoCall = false;
+            tbNsp.to(code).emit('announcement', '🏁 All 90 numbers have been called!');
+            tbNsp.to(code).emit('state', room);
+        }
+    });
+
+    socket.on('claim_pattern', ({ code, pattern }) => {
+        const room = tambola.getRoom(code);
+        if (!room) return;
+        const res = tambola.claimPattern(room, socket.id, pattern);
+        if (res.success) {
+            // Auto pause caller on claim so players/host can verify
+            if (room.autoCall) {
+                room.autoCall = false;
+                if (tbAutoTimers[code]) {
+                    clearInterval(tbAutoTimers[code]);
+                    delete tbAutoTimers[code];
+                }
+                tbNsp.to(code).emit('announcement', '⏸️ Auto-caller paused for prize claim');
+            }
+            tbNsp.to(code).emit('state', room);
+            tbNsp.to(code).emit('pattern_won', pattern, room.winners[pattern]);
+            tbNsp.to(code).emit('announcement', `🏆 ${res.playerName} claimed ${pattern.replace(/_/g, ' ').toUpperCase()}!`);
+            socket.emit('claim_result', { success: true, pattern });
+        } else {
+            socket.emit('claim_result', { success: false, reason: res.reason, pattern });
         }
     });
 
@@ -260,6 +357,8 @@ tbNsp.on('connection', (socket) => {
             if (result.newPatterns && result.newPatterns.length > 0) {
                 result.newPatterns.forEach(pattern => {
                     tbNsp.to(code).emit('pattern_won', pattern, room.winners[pattern]);
+                    const winnerName = room.players[socket.id]?.name || 'A player';
+                    tbNsp.to(code).emit('announcement', `🏆 ${winnerName} won ${pattern.replace(/_/g, ' ').toUpperCase()}!`);
                 });
             }
         }
@@ -283,9 +382,13 @@ tbNsp.on('connection', (socket) => {
         const room = tambola.getRoom(currentRoom);
         if (room) {
             tambola.markPlayerDisconnected(room, socket.id);
+            const hostSwitch = tambola.switchHostIfInactive(room);
+            if (hostSwitch) {
+                tbNsp.to(currentRoom).emit('announcement', `⭐ ${hostSwitch.newHostName} is now the Host!`);
+            }
             tbNsp.to(currentRoom).emit('state', room);
         }
     });
 });
 
-server.listen(PORT, () => console.log(`✅ Game Hub running on port ${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`✅ Game Hub running on port ${PORT}`));

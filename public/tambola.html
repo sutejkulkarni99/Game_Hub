@@ -1,130 +1,1483 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambola</title>
-    <style>
-        :root { --bg: #111; --surface: #222; --accent: #e94560; --gold: #f1c40f; }
-        body { font-family: system-ui, sans-serif; background: var(--bg); color: white; text-align: center; margin: 0; padding: 10px; }
-        .back-btn { position: fixed; top: 10px; left: 10px; background: var(--surface); color: white; border: 2px solid var(--gold); border-radius: 8px; padding: 8px 12px; text-decoration: none; font-weight: bold; z-index: 100; }
-        input, button { padding: 12px; border-radius: 8px; margin: 5px; font-size: 16px; }
-        input { background: var(--surface); color: white; border: 2px solid #444; }
-        button { background: var(--accent); color: white; border: none; cursor: pointer; }
-        .ticket { display: inline-block; margin: 20px auto; }
-        .ticket table { border-collapse: collapse; margin: 0 auto; }
-        .ticket td { width: 40px; height: 40px; border: 1px solid #444; text-align: center; vertical-align: middle; font-size: 18px; cursor: pointer; }
-        .ticket td.marked { background: var(--accent); color: white; }
-        .ticket td.blank { background: transparent; cursor: default; }
-        .called-numbers { max-width: 400px; margin: 10px auto; }
-        .called-numbers span { display: inline-block; background: var(--surface); padding: 5px 10px; margin: 3px; border-radius: 5px; }
-        .winners { margin-top: 20px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#05070E">
+<title>Polaris Tambola - Indian Housie</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><path d=%22M12 2L13.8 9.2L21 11L13.8 12.8L12 20L10.2 12.8L3 11L10.2 9.2L12 2Z%22 fill=%22%23F5E6C8%22/></svg>">
+<style>
+:root {
+  --bg:          #05070E;
+  --bg-deep:     #0A0D1A;
+  --card:        rgba(14, 18, 32, 0.8);
+  --card-hover:  rgba(18, 24, 42, 0.9);
+  --bd:          #1B2238;
+  --bd-hover:    #2A3455;
+  --fg:          #E8ECF5;
+  --mt:          #8B94AD;
+  --star:        #F5E6C8;
+  --aurora:      #7DD3FC;
+  --nebula:      #A78BFA;
+  --gn:          #4ADE80;
+  --yl:          #FBBF24;
+  --rd:          #F87171;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: var(--bg);
+  background-image: 
+    radial-gradient(circle at 50% 10%, #0D1426 0%, var(--bg) 80%),
+    radial-gradient(circle at 85% 60%, rgba(167, 139, 250, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 15% 80%, rgba(125, 211, 252, 0.04) 0%, transparent 50%);
+  color: var(--fg);
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+header {
+  background: rgba(5, 7, 14, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--bd);
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.bc { display: flex; align-items: center; gap: .65rem; text-decoration: none; }
+
+.lg {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, rgba(245, 230, 200, 0.2), rgba(125, 211, 252, 0.1));
+  border: 1px solid rgba(245, 230, 200, 0.3);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 10px rgba(245, 230, 200, 0.2);
+}
+.lg svg { width: 20px; height: 20px; }
+
+.tt { font-size: 1.05rem; font-weight: 700; color: var(--fg); letter-spacing: -0.01em; }
+.tt span {
+  color: var(--star);
+  font-weight: 600;
+  margin-left: 6px;
+  font-size: .72rem;
+  background: rgba(245, 230, 200, 0.1);
+  padding: 2px 7px;
+  border-radius: 5px;
+  border: 1px solid rgba(245, 230, 200, 0.2);
+}
+
+.hr { display: flex; align-items: center; gap: .5rem; }
+
+.btn-icon {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  color: var(--fg);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all .15s;
+}
+.btn-icon:hover {
+  background: var(--card-hover);
+  border-color: var(--bd-hover);
+  color: var(--aurora);
+}
+.btn-icon.active {
+  background: rgba(125, 211, 252, 0.12);
+  color: var(--aurora);
+  border-color: rgba(125, 211, 252, 0.35);
+}
+
+.back-btn {
+  color: var(--mt);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(14, 18, 32, 0.6);
+  border: 1px solid var(--bd);
+  transition: all .2s;
+}
+.back-btn:hover { color: var(--fg); border-color: var(--bd-hover); }
+
+/* Main Container */
+main {
+  flex: 1;
+  padding: 1.25rem 1rem 3rem;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.hidden { display: none !important; }
+
+/* Lobby Cards */
+.lobby-box {
+  max-width: 440px;
+  margin: 2rem auto;
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  padding: 2rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.lobby-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--fg);
+  margin-bottom: 0.3rem;
+}
+.lobby-title span { color: var(--star); }
+.lobby-sub {
+  color: var(--mt);
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.input-group {
+  margin-bottom: 1rem;
+  text-align: left;
+}
+.input-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mt);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.form-input {
+  width: 100%;
+  background: rgba(5, 7, 14, 0.7);
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--fg);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color .2s;
+}
+.form-input:focus {
+  border-color: var(--aurora);
+  box-shadow: 0 0 10px rgba(125, 211, 252, 0.15);
+}
+
+.code-input {
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  font-size: 1.25rem;
+  letter-spacing: 4px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.btn-primary {
+  width: 100%;
+  background: linear-gradient(135deg, var(--aurora), var(--nebula));
+  color: #05070E;
+  border: none;
+  padding: 11px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all .2s;
+  box-shadow: 0 2px 10px rgba(125, 211, 252, 0.2);
+}
+.btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-secondary {
+  width: 100%;
+  background: transparent;
+  color: var(--aurora);
+  border: 1px solid rgba(125, 211, 252, 0.3);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn-secondary:hover {
+  background: rgba(125, 211, 252, 0.08);
+  border-color: rgba(125, 211, 252, 0.5);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--mt);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 1.25rem 0;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--bd);
+}
+.divider span { padding: 0 10px; }
+
+/* In-Room Waiting View */
+.room-header {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.room-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.room-code-tag {
+  background: rgba(245, 230, 200, 0.12);
+  color: var(--star);
+  border: 1px solid rgba(245, 230, 200, 0.25);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+}
+
+/* In-Lobby QR Box */
+.lobby-qr-card {
+  background: rgba(5, 7, 14, 0.6);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+.lobby-qr-img {
+  width: 110px;
+  height: 110px;
+  background: #FFFFFF;
+  padding: 6px;
+  border-radius: 8px;
+  display: block;
+}
+
+.player-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 1rem 0;
+}
+.player-chip {
+  background: rgba(5, 7, 14, 0.6);
+  border: 1px solid var(--bd);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.player-chip.is-host {
+  border-color: rgba(245, 230, 200, 0.4);
+  color: var(--star);
+}
+.player-chip.is-me {
+  border-color: rgba(125, 211, 252, 0.4);
+  color: var(--aurora);
+}
+
+/* Game Interface Layout */
+.game-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+@media (min-width: 960px) {
+  .game-layout {
+    grid-template-columns: 340px 1fr;
+  }
+}
+
+/* Caller Stage */
+.caller-panel {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  padding: 1.25rem;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+}
+
+.ball-display-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0.75rem auto;
+}
+
+.ball-sphere {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #FFFFFF 0%, var(--aurora) 30%, #0F3854 75%, #051420 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #05070E;
+  font-weight: 800;
+  box-shadow: 0 0 25px rgba(125, 211, 252, 0.4), inset -5px -5px 15px rgba(0,0,0,0.6);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.ball-sphere.pop {
+  animation: ballBounce 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes ballBounce {
+  0% { transform: scale(0.6) rotate(-20deg); opacity: 0.6; }
+  60% { transform: scale(1.15) rotate(10deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.ball-number {
+  font-size: 3.5rem;
+  line-height: 1;
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  font-weight: 900;
+  text-shadow: 0 2px 4px rgba(255,255,255,0.4);
+}
+
+.ball-empty-text {
+  font-size: 1.1rem;
+  color: var(--mt);
+  font-weight: 700;
+}
+
+.lingo-banner {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  background: rgba(5, 7, 14, 0.7);
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  margin: 0.75rem 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--star);
+  text-align: center;
+}
+
+.recent-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 0.75rem;
+}
+.recent-bubble {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(14, 18, 32, 0.9);
+  border: 1px solid var(--bd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  color: var(--aurora);
+}
+
+.host-controls {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--bd);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.controls-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Master 90-Board */
+.master-board {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  padding: 1.25rem;
+  backdrop-filter: blur(12px);
+}
+
+.board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.grid-90 {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 5px;
+}
+
+.cell-90 {
+  aspect-ratio: 1;
+  background: rgba(5, 7, 14, 0.6);
+  border: 1px solid #161D30;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--mt);
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  transition: all 0.2s ease;
+}
+
+.cell-90.called {
+  background: rgba(125, 211, 252, 0.22);
+  border-color: var(--aurora);
+  color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(125, 211, 252, 0.4);
+}
+
+.cell-90.latest {
+  background: var(--star);
+  border-color: #FFFFFF;
+  color: #05070E;
+  transform: scale(1.08);
+  box-shadow: 0 0 14px rgba(245, 230, 200, 0.8);
+  z-index: 2;
+}
+
+/* Ticket Section */
+.ticket-section {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  padding: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.ticket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ticket-table-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 2px solid var(--bd-hover);
+  background: #070A14;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ticket-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 320px;
+}
+
+.ticket-table td {
+  width: 11.11%;
+  height: 52px;
+  text-align: center;
+  vertical-align: middle;
+  border: 1px solid #1B2238;
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  position: relative;
+  user-select: none;
+}
+
+.ticket-table td.blank {
+  background: rgba(5, 7, 14, 0.4);
+  cursor: default;
+}
+
+.ticket-table td.number {
+  background: rgba(14, 18, 32, 0.85);
+  color: var(--fg);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ticket-table td.number:hover {
+  background: rgba(18, 24, 42, 1);
+  border-color: var(--aurora);
+}
+
+.ticket-table td.number.eligible {
+  animation: pulseTicketCell 1.8s infinite;
+  border-color: var(--star);
+}
+
+@keyframes pulseTicketCell {
+  0% { box-shadow: inset 0 0 4px rgba(245, 230, 200, 0.3); }
+  50% { box-shadow: inset 0 0 12px rgba(245, 230, 200, 0.65); }
+  100% { box-shadow: inset 0 0 4px rgba(245, 230, 200, 0.3); }
+}
+
+.ticket-table td.marked {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.25), rgba(125, 211, 252, 0.35)) !important;
+  color: #FFFFFF !important;
+  border-color: var(--gn) !important;
+}
+
+.ticket-table td.marked::after {
+  content: "";
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--gn);
+  box-shadow: 0 0 12px var(--gn);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* Claims Grid */
+.claims-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 1.25rem;
+}
+
+.claim-card {
+  background: rgba(5, 7, 14, 0.6);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.claim-info { display: flex; flex-direction: column; gap: 2px; }
+.claim-name { font-size: 0.8rem; font-weight: 700; color: var(--fg); text-transform: uppercase; }
+.claim-winner { font-size: 0.72rem; color: var(--gn); font-weight: 600; }
+
+.claim-btn {
+  background: rgba(125, 211, 252, 0.12);
+  border: 1px solid rgba(125, 211, 252, 0.3);
+  color: var(--aurora);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.claim-btn:hover:not(:disabled) {
+  background: rgba(125, 211, 252, 0.25);
+  box-shadow: 0 0 10px rgba(125, 211, 252, 0.3);
+}
+.claim-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: var(--bd);
+  color: var(--mt);
+}
+
+/* 4K TV & Projector Mode */
+body.tv-mode header { display: none; }
+body.tv-mode main { max-width: 100vw; height: 100vh; padding: 1.5rem; }
+body.tv-mode .ticket-section { display: none; }
+body.tv-mode .game-layout {
+  grid-template-columns: 460px 1fr;
+  height: calc(100vh - 3rem);
+}
+body.tv-mode .ball-sphere {
+  width: 220px;
+  height: 220px;
+}
+body.tv-mode .ball-number {
+  font-size: 5.5rem;
+}
+body.tv-mode .lingo-banner {
+  font-size: 1.4rem;
+  min-height: 64px;
+}
+body.tv-mode .grid-90 { gap: 8px; }
+body.tv-mode .cell-90 { font-size: 1.2rem; }
+
+/* Large Displays (1440px to 4K) */
+@media (min-width: 1920px) {
+  main { max-width: 1600px; }
+  .ball-sphere { width: 170px; height: 170px; }
+  .ball-number { font-size: 4.2rem; }
+  .lingo-banner { font-size: 1.15rem; min-height: 54px; }
+  .cell-90 { font-size: 1rem; }
+  .ticket-table td { height: 60px; font-size: 1.3rem; }
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 7, 14, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-card {
+  background: var(--bg-deep);
+  border: 1px solid var(--bd-hover);
+  border-radius: 14px;
+  padding: 1.5rem;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+  text-align: center;
+}
+
+.toast {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 13, 26, 0.95);
+  border: 1px solid var(--star);
+  color: var(--fg);
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  z-index: 2000;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  animation: slideToast 0.3s ease;
+  pointer-events: none;
+}
+
+@keyframes slideToast {
+  from { transform: translate(-50%, -20px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+@media (max-width: 640px) {
+  .ticket-table td { height: 44px; font-size: 1rem; }
+  .grid-90 { gap: 3px; }
+  .cell-90 { font-size: 0.72rem; }
+  .ball-sphere { width: 110px; height: 110px; }
+  .ball-number { font-size: 2.8rem; }
+}
+</style>
 </head>
 <body>
-<a href="/" class="back-btn">← Hub</a>
-<div id="lobby">
-    <h1>🎟️ Tambola</h1>
-    <input type="text" id="name" placeholder="Your Name" maxlength="20"><br>
-    <button onclick="createRoom()">Create Room</button>
-    <hr>
-    <input type="text" id="join-code" placeholder="4-Digit Code" maxlength="4"><br>
-    <button onclick="joinRoom()">Join Room</button>
+
+<header>
+  <div class="bc">
+    <a href="/" class="lg" title="Back to Game Hub">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L13.8 9.2L21 11L13.8 12.8L12 20L10.2 12.8L3 11L10.2 9.2L12 2Z" fill="#F5E6C8"/>
+      </svg>
+    </a>
+    <div class="tt">Tambola <span>HOUSIE</span></div>
+  </div>
+  <div class="hr">
+    <button class="btn-icon" id="tv-toggle-btn" onclick="toggleTvMode()" title="Toggle Big Screen TV View">
+      📺 TV View
+    </button>
+    <button class="btn-icon" id="voice-toggle-btn" onclick="toggleVoice()" title="Toggle Voice Announcements">
+      🗣️ Voice: ON
+    </button>
+    <button class="btn-icon" id="sound-toggle-btn" onclick="toggleSound()" title="Toggle Sound FX">
+      🔊 FX
+    </button>
+    <a href="/" class="back-btn">← Hub</a>
+  </div>
+</header>
+
+<main>
+  <!-- QUICK-JOIN CARD (WHEN SCANNED VIA QR CODE) -->
+  <div id="quick-join-view" class="lobby-box hidden">
+    <div style="font-size: 2.2rem; margin-bottom: 0.35rem;">🎟️</div>
+    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--star); font-weight:700;">JOINING ROOM</div>
+    <div style="font-size:2rem; font-weight:800; font-family:ui-monospace, monospace; color:var(--aurora); margin:4px 0 16px;" id="quick-join-code-tag">----</div>
+
+    <div class="input-group">
+      <label class="input-label">Your Player Name</label>
+      <input type="text" id="quick-player-name" class="form-input" placeholder="Enter your name" maxlength="20" autocomplete="off" />
+    </div>
+
+    <button class="btn-primary" onclick="submitQuickJoin()">Join Room 🎟️</button>
+    <button class="btn-secondary" style="margin-top:10px;" onclick="showStandardLobby()">Switch Room / Host Game</button>
+  </div>
+
+  <!-- STANDARD LOBBY SCREEN -->
+  <div id="lobby-view" class="lobby-box">
+    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎟️</div>
+    <h2 class="lobby-title">Tambola <span>Housie</span></h2>
+    <p class="lobby-sub">Classic 90-ball Indian Housie with automated voice caller and master board.</p>
+
+    <div class="input-group">
+      <label class="input-label">Player Name</label>
+      <input type="text" id="player-name" class="form-input" placeholder="Enter your name" maxlength="20" autocomplete="off" />
+    </div>
+
+    <button class="btn-primary" onclick="createRoom()">Create Game Room</button>
+
+    <div class="divider"><span>OR JOIN GAME</span></div>
+
+    <div class="input-group">
+      <label class="input-label">4-Digit Room Code</label>
+      <input type="text" id="join-code" class="form-input code-input" placeholder="1234" maxlength="4" autocomplete="off" />
+    </div>
+
+    <button class="btn-secondary" onclick="joinRoom()">Join Room</button>
+  </div>
+
+  <!-- WAITING ROOM (BEFORE START) -->
+  <div id="room-view" class="hidden">
+    <div class="room-header">
+      <div class="room-badge">
+        <span style="font-size: 0.85rem; color: var(--mt); font-weight: 600;">ROOM:</span>
+        <span class="room-code-tag" id="display-room-code">----</span>
+        <button class="btn-icon" onclick="copyRoomLink()" title="Copy Link">📋 Copy</button>
+        <button class="btn-icon" onclick="showQrModal()" title="Show QR Code">📱 QR</button>
+      </div>
+      <div>
+        <span id="player-count-badge" class="room-code-tag" style="color:var(--aurora); font-size:0.85rem;">1 Player</span>
+      </div>
+    </div>
+
+    <!-- In-Lobby QR Box for Instant Couch Joining -->
+    <div class="lobby-qr-card">
+      <img id="lobby-inline-qr" class="lobby-qr-img" src="" alt="Scan to Join" />
+      <div>
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--star); margin-bottom: 4px;">📱 Scan with Phone to Join</h4>
+        <p style="font-size: 0.8rem; color: var(--mt); line-height: 1.4;">Point your mobile camera at this code on the same Wi-Fi network to enter immediately.</p>
+      </div>
+    </div>
+
+    <div style="background:var(--card); border:1px solid var(--bd); border-radius:14px; padding:1.5rem; margin-bottom:1.25rem;">
+      <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--star); margin-bottom: 0.75rem;">PLAYERS IN LOBBY</h3>
+      <div class="player-chips" id="lobby-player-list"></div>
+      
+      <div id="host-setup-options" class="hidden" style="margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid var(--bd);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1rem;">
+          <div>
+            <div style="font-weight:700; font-size:0.9rem;">Auto-Caller Speed</div>
+            <div style="font-size:0.75rem; color:var(--mt);">Interval between automated number calls</div>
+          </div>
+          <select id="lobby-speed-select" class="form-input" style="width:auto; padding:6px 12px; font-size:0.85rem;">
+            <option value="3">3 Seconds</option>
+            <option value="5" selected>5 Seconds</option>
+            <option value="8">8 Seconds</option>
+            <option value="12">12 Seconds</option>
+          </select>
+        </div>
+        <button id="start-game-btn" class="btn-primary" onclick="startGame()">Start Game 🎟️</button>
+      </div>
+
+      <div id="waiting-host-notice" style="color:var(--mt); font-size:0.85rem; text-align:center; padding:1rem 0;">
+        Waiting for the host to start the game...
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVE GAME SCREEN -->
+  <div id="game-view" class="hidden">
+    <div class="room-header">
+      <div class="room-badge">
+        <span style="font-size: 0.82rem; color: var(--mt);">ROOM:</span>
+        <span class="room-code-tag" id="game-display-code">----</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span id="called-counter" style="font-family:ui-monospace, monospace; font-size:0.85rem; color:var(--aurora);">0 / 90 CALLED</span>
+        <button class="btn-icon" onclick="showQrModal()">📱 QR</button>
+      </div>
+    </div>
+
+    <div class="game-layout">
+      <!-- Left Column: Caller Orb & Controls -->
+      <div class="caller-panel">
+        <div style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--mt);">LATEST NUMBER</div>
+        
+        <div class="ball-display-wrap">
+          <div class="ball-sphere" id="current-ball">
+            <span class="ball-empty-text" id="empty-ball-label">READY</span>
+            <span class="ball-number hidden" id="current-ball-num">--</span>
+          </div>
+        </div>
+
+        <div class="lingo-banner" id="lingo-display">
+          Ready for number calling...
+        </div>
+
+        <div style="font-size:0.72rem; color:var(--mt); font-weight:600; text-transform:uppercase; margin-top:0.5rem;">RECENT CALLS</div>
+        <div class="recent-strip" id="recent-balls-strip">
+          <span style="color:var(--mt); font-size:0.78rem;">None yet</span>
+        </div>
+
+        <!-- Host Action Controls -->
+        <div class="host-controls" id="host-controls-panel">
+          <div class="controls-row">
+            <button id="auto-call-toggle-btn" class="btn-primary" style="flex:1;" onclick="toggleAutoCall()">
+              ▶️ Start Auto Call
+            </button>
+            <select id="game-speed-select" class="form-input" style="width:90px; padding:8px 6px; font-size:0.8rem;" onchange="updateCallSpeed()">
+              <option value="3">3s</option>
+              <option value="5" selected>5s</option>
+              <option value="8">8s</option>
+              <option value="12">12s</option>
+            </select>
+          </div>
+
+          <button class="btn-secondary" onclick="manualCallNumber()">
+            ⚡ Manual Call Next (Space)
+          </button>
+
+          <button class="btn-icon" style="justify-content:center; color:var(--yl);" onclick="confirmResetGame()">
+            🔄 Fresh Tickets / Restart
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Column: Master 90-Board -->
+      <div class="master-board">
+        <div class="board-header">
+          <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--star);">
+            MASTER 90-BALL BOARD
+          </div>
+          <div style="font-size:0.75rem; color:var(--mt);">
+            Remaining: <strong id="remaining-count" style="color:var(--fg);">90</strong>
+          </div>
+        </div>
+
+        <div class="grid-90" id="board-90-grid"></div>
+      </div>
+    </div>
+
+    <!-- Player Ticket & Claim Area (Hidden in TV Mode) -->
+    <div class="ticket-section" id="player-ticket-section">
+      <div class="ticket-header">
+        <div>
+          <h3 style="font-size:1.1rem; font-weight:800; color:var(--fg); display:flex; align-items:center; gap:8px;">
+            <span>🎟️ Your Ticket</span>
+            <span class="room-code-tag" style="font-size:0.75rem; padding:2px 8px;" id="player-ticket-owner">Player</span>
+          </h3>
+          <p style="font-size:0.78rem; color:var(--mt);">Tap called numbers to mark. Claims are auto-verified.</p>
+        </div>
+        <div>
+          <label style="font-size:0.75rem; color:var(--mt); font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px;">
+            <input type="checkbox" id="assist-checkbox" checked onchange="renderTicket()" />
+            Assist Glow
+          </label>
+        </div>
+      </div>
+
+      <div class="ticket-table-wrap">
+        <table class="ticket-table" id="my-ticket-table"></table>
+      </div>
+
+      <!-- Prize Claims Grid -->
+      <div style="margin-top:1.5rem;">
+        <div style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--star); margin-bottom:8px;">
+          🏆 PRIZE CLAIMS
+        </div>
+        <div class="claims-grid" id="claims-container"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- QR Code Modal -->
+<div id="qr-modal" class="modal-overlay hidden" onclick="closeQrModal(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <h3 style="color:var(--star); font-size:1.1rem; font-weight:800; margin-bottom:0.5rem;">Scan to Join Tambola</h3>
+    <p style="color:var(--mt); font-size:0.8rem; margin-bottom:1rem;">Scan with mobile camera to enter this room.</p>
+    <div style="background:#FFFFFF; padding:12px; border-radius:10px; display:inline-block; margin-bottom:1rem;">
+      <img id="modal-qr-img" src="" width="180" height="180" alt="Room QR" />
+    </div>
+    <div style="font-family:ui-monospace, monospace; font-size:1.2rem; font-weight:700; color:var(--star);" id="qr-room-code-label">CODE: ----</div>
+    <button class="btn-secondary" style="margin-top:1rem;" onclick="closeQrModal()">Close</button>
+  </div>
 </div>
-<div id="room" class="hidden">
-    <h2 id="room-code"></h2>
-    <div id="player-list"></div>
-    <button id="start-btn" onclick="startGame()">Start Game</button>
-</div>
-<div id="game" class="hidden">
-    <h2 id="game-room-code"></h2>
-    <button id="call-btn" onclick="callNumber()">Call Next Number</button>
-    <div class="called-numbers" id="called-numbers"></div>
-    <div class="ticket" id="ticket"></div>
-    <div class="winners" id="winners"></div>
-</div>
+
+<!-- Socket.io -->
 <script src="/socket.io/socket.io.js"></script>
+
 <script>
-    const socket = io('/tambola');
-    let currentCode = null;
-    let currentTicket = null;
-    let currentMarks = null;
+/* ==================== POLARIS TAMBOLA CLIENT ==================== */
+const socket = io('/tambola');
 
-    function createRoom() {
-        const name = document.getElementById('name').value.trim();
-        if (!name) return alert('Enter name');
-        socket.emit('create_room', { name });
+let currentCode = null;
+let myPlayerName = '';
+let myTicket = null;
+let myMarks = null;
+let calledNumbers = [];
+let roomState = null;
+let isHost = false;
+let autoCallActive = false;
+let voiceEnabled = true;
+let soundEnabled = true;
+
+// Traditional Indian Housie Nicknames
+const HOUSIE_LINGO = {
+  1: "Number 1 — Butter bun", 2: "Number 2 — Kaala dhan", 3: "Number 3 — Goodness me",
+  4: "Number 4 — Knock on the door", 5: "Number 5 — Man alive", 6: "Number 6 — Half a dozen",
+  7: "Number 7 — Lucky seven", 8: "Number 8 — One fat lady", 9: "Number 9 — Doctor's time",
+  10: "Number 10 — A big fat hen", 11: "Number 11 — Two beautiful legs", 12: "Number 12 — One dozen",
+  13: "Number 13 — Unlucky for some", 14: "Number 14 — Valentine's day", 15: "Number 15 — Independence day",
+  16: "Number 16 — Sweet sixteen", 17: "Number 17 — Dancing queen", 18: "Number 18 — Voting age",
+  19: "Number 19 — End of teens", 20: "Number 20 — Blind twenty", 21: "Number 21 — Key of the door",
+  22: "Number 22 — Two little ducks", 23: "Number 23 — You and me", 24: "Number 24 — Two dozen",
+  25: "Number 25 — Silver jubilee", 26: "Number 26 — Republic day", 27: "Number 27 — Gateway to heaven",
+  28: "Number 28 — Duck and its mate", 29: "Number 29 — Rise and shine", 30: "Number 30 — Dirty thirty",
+  31: "Number 31 — Time for fun", 32: "Number 32 — Buckle my shoe", 33: "Number 33 — All the threes",
+  34: "Number 34 — Ask for more", 35: "Number 35 — Jump and jive", 36: "Number 36 — Three dozen",
+  37: "Number 37 — More than eleven", 38: "Number 38 — Christmas cake", 39: "Number 39 — Watch the line",
+  40: "Number 40 — Naughty forty", 41: "Number 41 — Life's begun", 42: "Number 42 — Winnie the Pooh",
+  43: "Number 43 — Down the sea", 44: "Number 44 — All the fours", 45: "Number 45 — Halfway there",
+  46: "Number 46 — Up to tricks", 47: "Number 47 — Four and seven", 48: "Number 48 — Four dozen",
+  49: "Number 49 — Rise and shine", 50: "Number 50 — Half a century", 51: "Number 51 — Charity begins",
+  52: "Number 52 — Pack of cards", 53: "Number 53 — Pack with three", 54: "Number 54 — Clean the floor",
+  55: "Number 55 — All the fives", 56: "Number 56 — Was she worth it", 57: "Number 57 — Heinz varieties",
+  58: "Number 58 — Make them wait", 59: "Number 59 — Bright and fine", 60: "Number 60 — Five dozen",
+  61: "Number 61 — Bakers bun", 62: "Number 62 — Turn the screw", 63: "Number 63 — Tickle me",
+  64: "Number 64 — Red raw", 65: "Number 65 — Old age pension", 66: "Number 66 — Clickety click",
+  67: "Number 67 — Made in heaven", 68: "Number 68 — Saving grace", 69: "Number 69 — Anyway up",
+  70: "Number 70 — Lucky blind", 71: "Number 71 — Bang the drum", 72: "Number 72 — Six dozen",
+  73: "Number 73 — Queen bee", 74: "Number 74 — Candy store", 75: "Number 75 — Diamond jubilee",
+  76: "Number 76 — Trombones", 77: "Number 77 — Two hockey sticks", 78: "Number 78 — Heaven's gate",
+  79: "Number 79 — One more time", 80: "Number 80 — Gandhi's chashma", 81: "Number 81 — Stop and run",
+  82: "Number 82 — Fat lady with duck", 83: "Number 83 — Time for tea", 84: "Number 84 — Seven dozen",
+  85: "Number 85 — Staying alive", 86: "Number 86 — Between the sticks", 87: "Number 87 — Torquay in Devon",
+  88: "Number 88 — Two fat ladies", 89: "Number 89 — Nearly there", 90: "Number 90 — Top of the shop"
+};
+
+const PATTERNS_DEF = [
+  { id: 'early_five', name: 'Early 5', desc: 'First 5 marked' },
+  { id: 'four_corners', name: 'Four Corners', desc: '4 corner numbers' },
+  { id: 'top_line', name: 'Top Line', desc: 'Row 1 complete' },
+  { id: 'middle_line', name: 'Middle Line', desc: 'Row 2 complete' },
+  { id: 'bottom_line', name: 'Bottom Line', desc: 'Row 3 complete' },
+  { id: 'full_house', name: 'Full House', desc: 'All 15 numbers' }
+];
+
+/* Web Audio Synthesizer */
+const sound = {
+  ctx: null,
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) this.ctx = new AudioCtx();
     }
-    function joinRoom() {
-        const name = document.getElementById('name').value.trim();
-        const code = document.getElementById('join-code').value.trim();
-        if (!name || !code) return alert('Enter name and code');
-        socket.emit('join_room', { code, name });
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+  },
+  play(type) {
+    if (!soundEnabled) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    if (type === 'ball') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(480, now);
+      osc.frequency.exponentialRampToValueAtTime(320, now + 0.18);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+      osc.start(now);
+      osc.stop(now + 0.2);
+    } else if (type === 'dab') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    } else if (type === 'fanfare') {
+      [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.connect(g);
+        g.connect(this.ctx.destination);
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0.2, now + i * 0.1);
+        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.35);
+        o.start(now + i * 0.1);
+        o.stop(now + i * 0.1 + 0.35);
+      });
+    } else if (type === 'bogey') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.setValueAtTime(130, now + 0.15);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      osc.start(now);
+      osc.stop(now + 0.3);
     }
-    function startGame() { socket.emit('start_game', currentCode); }
-    function callNumber() { socket.emit('call_number', currentCode); }
+  }
+};
 
-    socket.on('state', (room) => {
-        currentCode = room.code;
-        if (room.gamePhase === 'LOBBY') {
-            document.getElementById('lobby').classList.add('hidden');
-            document.getElementById('room').classList.remove('hidden');
-            document.getElementById('game').classList.add('hidden');
-            document.getElementById('room-code').innerText = `Room: ${room.code}`;
-            document.getElementById('player-list').innerHTML = Object.values(room.players).map(p => `<div>${p.name}</div>`).join('');
-            document.getElementById('start-btn').disabled = room.hostId !== socket.id;
-        } else if (room.gamePhase === 'PLAYING') {
-            document.getElementById('lobby').classList.add('hidden');
-            document.getElementById('room').classList.add('hidden');
-            document.getElementById('game').classList.remove('hidden');
-            document.getElementById('game-room-code').innerText = `Room: ${room.code}`;
-            const myPlayer = room.players[socket.id];
-            if (myPlayer && myPlayer.ticket) {
-                currentTicket = myPlayer.ticket;
-                currentMarks = myPlayer.marks;
-                renderTicket();
-            }
-            const calledDiv = document.getElementById('called-numbers');
-            calledDiv.innerHTML = room.calledNumbers.slice(-10).map(n => `<span>${n}</span>`).join('');
-            const winnersDiv = document.getElementById('winners');
-            winnersDiv.innerHTML = Object.entries(room.winners).map(([pattern, wins]) => `<div><strong>${pattern}:</strong> ${wins.map(w=>w.name).join(', ')}</div>`).join('');
-            document.getElementById('call-btn').disabled = room.hostId !== socket.id;
-        }
-    });
+/* Speech Synthesizer */
+function speakNumber(num) {
+  if (!voiceEnabled || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const text = HOUSIE_LINGO[num] || `Number ${num}`;
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 1.0;
+  utterance.pitch = 1.0;
+  window.speechSynthesis.speak(utterance);
+}
 
-    function renderTicket() {
-        if (!currentTicket) return;
-        const ticketDiv = document.getElementById('ticket');
-        let html = '<table>';
-        for (let r = 0; r < 3; r++) {
-            html += '<tr>';
-            for (let c = 0; c < 9; c++) {
-                const num = currentTicket[r][c];
-                if (num === 0) {
-                    html += '<td class="blank"></td>';
-                } else {
-                    const marked = currentMarks[r][c] ? 'marked' : '';
-                    html += `<td class="${marked}" onclick="markNumber(${r},${c})">${num}</td>`;
-                }
-            }
-            html += '</tr>';
-        }
-        html += '</table>';
-        ticketDiv.innerHTML = html;
+function unlockMobileAudio() {
+  sound.init();
+  if ('speechSynthesis' in window) {
+    const silent = new SpeechSynthesisUtterance('');
+    window.speechSynthesis.speak(silent);
+  }
+}
+
+/* Initialization */
+window.addEventListener('DOMContentLoaded', () => {
+  render90Board();
+
+  const params = new URLSearchParams(window.location.search);
+  const codeParam = params.get('code');
+
+  if (codeParam && codeParam.trim().length === 4) {
+    currentCode = codeParam.trim();
+    document.getElementById('quick-join-code-tag').innerText = currentCode;
+    document.getElementById('lobby-view').classList.add('hidden');
+    document.getElementById('quick-join-view').classList.remove('hidden');
+
+    const savedName = sessionStorage.getItem('polaris_tb_name');
+    if (savedName) document.getElementById('quick-player-name').value = savedName;
+  } else {
+    const savedCode = sessionStorage.getItem('polaris_tb_code');
+    const savedName = sessionStorage.getItem('polaris_tb_name');
+    if (savedCode && savedName) {
+      myPlayerName = savedName;
+      currentCode = savedCode;
+      socket.emit('reconnect_player', { code: savedCode, name: savedName });
+    }
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && isHost && roomState?.gamePhase === 'PLAYING' && document.activeElement.tagName !== 'INPUT') {
+      e.preventDefault();
+      manualCallNumber();
+    }
+  });
+});
+
+function submitQuickJoin() {
+  const name = document.getElementById('quick-player-name').value.trim();
+  if (!name) return showToast('Please enter your name');
+  unlockMobileAudio();
+  myPlayerName = name;
+  sessionStorage.setItem('polaris_tb_name', name);
+  sessionStorage.setItem('polaris_tb_code', currentCode);
+  socket.emit('join_room', { code: currentCode, name });
+}
+
+function showStandardLobby() {
+  document.getElementById('quick-join-view').classList.add('hidden');
+  document.getElementById('lobby-view').classList.remove('hidden');
+}
+
+function createRoom() {
+  const name = document.getElementById('player-name').value.trim();
+  if (!name) return showToast('Please enter your name');
+  unlockMobileAudio();
+  myPlayerName = name;
+  sessionStorage.setItem('polaris_tb_name', name);
+  socket.emit('create_room', { name });
+}
+
+function joinRoom() {
+  const name = document.getElementById('player-name').value.trim();
+  const code = document.getElementById('join-code').value.trim();
+  if (!name) return showToast('Please enter your name');
+  if (!code || code.length !== 4) return showToast('Enter 4-digit code');
+  unlockMobileAudio();
+  myPlayerName = name;
+  currentCode = code;
+  sessionStorage.setItem('polaris_tb_name', name);
+  sessionStorage.setItem('polaris_tb_code', code);
+  socket.emit('join_room', { code, name });
+}
+
+function startGame() {
+  if (!currentCode) return;
+  socket.emit('start_game', currentCode);
+}
+
+function manualCallNumber() {
+  if (!currentCode || !isHost) return;
+  socket.emit('call_number', currentCode);
+}
+
+function toggleAutoCall() {
+  if (!currentCode || !isHost) return;
+  const speed = parseInt(document.getElementById('game-speed-select').value) || 5;
+  socket.emit('set_auto_call', {
+    code: currentCode,
+    enabled: !autoCallActive,
+    intervalSec: speed
+  });
+}
+
+function updateCallSpeed() {
+  if (!isHost || !autoCallActive) return;
+  const speed = parseInt(document.getElementById('game-speed-select').value) || 5;
+  socket.emit('set_auto_call', {
+    code: currentCode,
+    enabled: true,
+    intervalSec: speed
+  });
+}
+
+function confirmResetGame() {
+  if (!confirm('Start a fresh match with newly generated tickets?')) return;
+  socket.emit('reset_game', currentCode);
+}
+
+function markTicketNumber(row, col) {
+  if (!myTicket || !currentCode) return;
+  const num = myTicket[row][col];
+  if (num === 0) return;
+  if (!calledNumbers.includes(num)) {
+    sound.play('bogey');
+    return showToast(`Number ${num} has not been called yet!`);
+  }
+  sound.play('dab');
+  socket.emit('mark_number', { code: currentCode, row, col });
+}
+
+function claimPrize(pattern) {
+  if (!currentCode) return;
+  socket.emit('claim_pattern', { code: currentCode, pattern });
+}
+
+function render90Board() {
+  const grid = document.getElementById('board-90-grid');
+  grid.innerHTML = '';
+  for (let i = 1; i <= 90; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell-90';
+    cell.id = `cell-90-${i}`;
+    cell.innerText = i;
+    grid.appendChild(cell);
+  }
+}
+
+function update90Board() {
+  const latest = calledNumbers[calledNumbers.length - 1];
+  for (let i = 1; i <= 90; i++) {
+    const el = document.getElementById(`cell-90-${i}`);
+    if (!el) continue;
+    if (calledNumbers.includes(i)) {
+      el.classList.add('called');
+      el.classList.toggle('latest', i === latest);
+    } else {
+      el.classList.remove('called', 'latest');
+    }
+  }
+  document.getElementById('remaining-count').innerText = 90 - calledNumbers.length;
+  document.getElementById('called-counter').innerText = `${calledNumbers.length} / 90 CALLED`;
+}
+
+function renderTicket() {
+  if (!myTicket) return;
+  const table = document.getElementById('my-ticket-table');
+  const assist = document.getElementById('assist-checkbox').checked;
+  let html = '';
+
+  for (let r = 0; r < 3; r++) {
+    html += '<tr>';
+    for (let c = 0; c < 9; c++) {
+      const num = myTicket[r][c];
+      if (num === 0) {
+        html += '<td class="blank"></td>';
+      } else {
+        const isMarked = myMarks && myMarks[r][c];
+        const isCalled = calledNumbers.includes(num);
+        let cls = 'number';
+        if (isMarked) cls += ' marked';
+        if (assist && isCalled && !isMarked) cls += ' eligible';
+        html += `<td class="${cls}" onclick="markTicketNumber(${r},${c})">${num}</td>`;
+      }
+    }
+    html += '</tr>';
+  }
+  table.innerHTML = html;
+}
+
+function renderClaims(winners = {}) {
+  const container = document.getElementById('claims-container');
+  container.innerHTML = '';
+
+  PATTERNS_DEF.forEach(def => {
+    const card = document.createElement('div');
+    card.className = 'claim-card';
+    const isWon = winners[def.id] && winners[def.id].length > 0;
+    const winnerNames = isWon ? winners[def.id].map(w => w.name).join(', ') : '';
+
+    card.innerHTML = `
+      <div class="claim-info">
+        <div class="claim-name">${def.name}</div>
+        <div style="font-size:0.7rem; color:var(--mt);">${def.desc}</div>
+        ${isWon ? `<div class="claim-winner">🏆 ${winnerNames}</div>` : ''}
+      </div>
+      <button class="claim-btn" id="claim-btn-${def.id}" onclick="claimPrize('${def.id}')" ${isWon ? 'disabled' : ''}>
+        ${isWon ? 'Claimed' : 'Claim Prize'}
+      </button>
+    `;
+    container.appendChild(card);
+  });
+}
+
+socket.on('state', (room) => {
+  roomState = room;
+  currentCode = room.code;
+  sessionStorage.setItem('polaris_tb_code', room.code);
+  isHost = room.hostId === socket.id;
+  calledNumbers = room.calledNumbers || [];
+
+  document.getElementById('display-room-code').innerText = room.code;
+  document.getElementById('game-display-code').innerText = room.code;
+  document.getElementById('qr-room-code-label').innerText = `CODE: ${room.code}`;
+
+  // Update In-Lobby QR Preview
+  const joinUrl = `${window.location.origin}/tambola?code=${room.code}`;
+  const qrSrc = `/api/qr?text=${encodeURIComponent(joinUrl)}`;
+  const inlineQr = document.getElementById('lobby-inline-qr');
+  if (inlineQr) inlineQr.src = qrSrc;
+  const modalQr = document.getElementById('modal-qr-img');
+  if (modalQr) modalQr.src = qrSrc;
+
+  if (room.gamePhase === 'LOBBY') {
+    document.getElementById('quick-join-view').classList.add('hidden');
+    document.getElementById('lobby-view').classList.add('hidden');
+    document.getElementById('room-view').classList.remove('hidden');
+    document.getElementById('game-view').classList.add('hidden');
+
+    const players = Object.values(room.players);
+    document.getElementById('player-count-badge').innerText = `${players.length} Player${players.length > 1 ? 's' : ''}`;
+    
+    document.getElementById('lobby-player-list').innerHTML = players.map(p => {
+      let cls = 'player-chip';
+      if (p.id === room.hostId) cls += ' is-host';
+      if (p.id === socket.id) cls += ' is-me';
+      return `<div class="${cls}">
+        ${p.id === room.hostId ? '⭐' : '👤'} ${p.name}
+      </div>`;
+    }).join('');
+
+    document.getElementById('host-setup-options').classList.toggle('hidden', !isHost);
+    document.getElementById('waiting-host-notice').classList.toggle('hidden', isHost);
+
+  } else if (room.gamePhase === 'PLAYING') {
+    document.getElementById('quick-join-view').classList.add('hidden');
+    document.getElementById('lobby-view').classList.add('hidden');
+    document.getElementById('room-view').classList.add('hidden');
+    document.getElementById('game-view').classList.remove('hidden');
+
+    document.getElementById('host-controls-panel').classList.toggle('hidden', !isHost);
+
+    autoCallActive = !!room.autoCall;
+    const autoBtn = document.getElementById('auto-call-toggle-btn');
+    if (autoBtn) {
+      autoBtn.innerHTML = autoCallActive ? '⏸️ Pause Auto Call' : '▶️ Start Auto Call';
+      autoBtn.style.background = autoCallActive ? 'rgba(248, 113, 113, 0.2)' : 'linear-gradient(135deg, var(--aurora), var(--nebula))';
+      autoBtn.style.color = autoCallActive ? 'var(--rd)' : '#05070E';
     }
 
-    function markNumber(row, col) {
-        socket.emit('mark_number', { code: currentCode, row, col });
+    const me = room.players[socket.id];
+    if (me && me.ticket) {
+      myTicket = me.ticket;
+      myMarks = me.marks;
+      document.getElementById('player-ticket-owner').innerText = me.name;
+      renderTicket();
     }
 
-    socket.on('number_called', (num, called, remaining) => {
-        // Optional: auto-update called list
-    });
-    socket.on('pattern_won', (pattern, winners) => {
-        alert(`${pattern.replace(/_/g, ' ')} won by ${winners.map(w=>w.name).join(', ')}!`);
-    });
-    socket.on('announcement', msg => alert(msg));
-    socket.on('error', msg => alert(msg));
+    update90Board();
+    renderClaims(room.winners || {});
+
+    if (calledNumbers.length > 0) {
+      const latest = calledNumbers[calledNumbers.length - 1];
+      showBallNumber(latest, false);
+    }
+  }
+});
+
+socket.on('number_called', (num, allCalled) => {
+  calledNumbers = allCalled;
+  sound.play('ball');
+  showBallNumber(num, true);
+  speakNumber(num);
+  update90Board();
+  renderTicket();
+});
+
+socket.on('pattern_won', (pattern, wins) => {
+  sound.play('fanfare');
+  renderClaims(roomState?.winners || {});
+});
+
+socket.on('claim_result', (res) => {
+  if (res.success) {
+    showToast(`🎉 Verified: ${res.pattern.replace(/_/g, ' ').toUpperCase()}!`);
+  } else {
+    sound.play('bogey');
+    showToast(`⚠️ ${res.reason || 'False Claim / Bogey!'}`);
+  }
+});
+
+socket.on('announcement', (msg) => {
+  showToast(msg);
+});
+
+socket.on('error', (err) => {
+  showToast(`Error: ${err}`);
+});
+
+function showBallNumber(num, animate = true) {
+  const sphere = document.getElementById('current-ball');
+  const numEl = document.getElementById('current-ball-num');
+  const emptyLabel = document.getElementById('empty-ball-label');
+  const lingoEl = document.getElementById('lingo-display');
+
+  emptyLabel.classList.add('hidden');
+  numEl.classList.remove('hidden');
+  numEl.innerText = num;
+
+  if (animate) {
+    sphere.classList.remove('pop');
+    void sphere.offsetWidth;
+    sphere.classList.add('pop');
+  }
+
+  lingoEl.innerText = HOUSIE_LINGO[num] || `Number ${num}`;
+
+  const recentSlice = calledNumbers.slice(-6, -1).reverse();
+  const strip = document.getElementById('recent-balls-strip');
+  if (recentSlice.length === 0) {
+    strip.innerHTML = '<span style="color:var(--mt); font-size:0.78rem;">None yet</span>';
+  } else {
+    strip.innerHTML = recentSlice.map(n => `<div class="recent-bubble">${n}</div>`).join('');
+  }
+}
+
+function toggleTvMode() {
+  document.body.classList.toggle('tv-mode');
+  const btn = document.getElementById('tv-toggle-btn');
+  btn.classList.toggle('active', document.body.classList.contains('tv-mode'));
+}
+
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn = document.getElementById('voice-toggle-btn');
+  btn.innerText = `🗣️ Voice: ${voiceEnabled ? 'ON' : 'OFF'}`;
+  btn.classList.toggle('active', voiceEnabled);
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  const btn = document.getElementById('sound-toggle-btn');
+  btn.innerText = `🔊 FX: ${soundEnabled ? 'ON' : 'OFF'}`;
+  btn.classList.toggle('active', soundEnabled);
+}
+
+function copyRoomLink() {
+  const url = `${window.location.origin}/tambola?code=${currentCode}`;
+  navigator.clipboard.writeText(url).then(() => showToast('📋 Link copied to clipboard!'));
+}
+
+function showQrModal() {
+  if (!currentCode) return;
+  document.getElementById('qr-modal').classList.remove('hidden');
+}
+
+function closeQrModal(e) {
+  document.getElementById('qr-modal').classList.add('hidden');
+}
+
+function showToast(msg) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerText = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
 </script>
 </body>
 </html>
