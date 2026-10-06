@@ -428,10 +428,13 @@ main {
 .card-container {
   width: 68px;
   height: 98px;
-  perspective: 800px;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
   cursor: pointer;
   position: relative;
-  transition: transform 0.15s ease;
+  border-radius: 8px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
 }
 .card-container:hover {
   transform: translateY(-2px);
@@ -439,32 +442,41 @@ main {
 .card-container.empty {
   visibility: hidden;
   cursor: default;
+  pointer-events: none;
 }
 
 .card-inner {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-container.face-up .card-inner {
   transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
 }
 
 .card-face {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  backface-visibility: hidden;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
   border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--bd);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.45);
+  box-sizing: border-box !important;
 }
 
 .card-back {
@@ -472,58 +484,71 @@ main {
   background-image: 
     radial-gradient(circle at 50% 50%, rgba(245, 230, 200, 0.15) 0%, transparent 60%),
     linear-gradient(135deg, rgba(125, 211, 252, 0.06), rgba(167, 139, 250, 0.06));
-  border: 1px solid #1F2844;
+  border: 1.5px solid #1F2844;
   color: var(--star);
-  font-size: 1.2rem;
-  position: relative;
-  overflow: hidden;
+  transform: rotateY(0deg);
+  -webkit-transform: rotateY(0deg);
+  z-index: 1;
 }
-.card-back::after {
-  content: "✦";
+
+.card-star {
+  font-size: 1.35rem;
+  line-height: 1;
   color: var(--star);
-  font-size: 1.4rem;
-  opacity: 0.7;
+  opacity: 0.85;
+  text-shadow: 0 0 8px rgba(245, 230, 200, 0.4);
 }
 
 .card-front {
   transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
   background: #0B1020;
-  border: 1.5px solid var(--bd);
+  border: 2px solid var(--bd);
   font-family: ui-monospace, "SF Mono", Consolas, monospace;
   font-weight: 800;
-  font-size: 1.6rem;
-  position: relative;
+  font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+  z-index: 2;
+}
+
+/* Visibility culling guarantees cross-browser perfection (especially Firefox) */
+.card-container.face-up .card-back {
+  opacity: 0;
+  pointer-events: none;
+}
+.card-container:not(.face-up) .card-front {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .val-neg2, .val-neg1 {
-  border-color: var(--nebula);
-  color: var(--nebula);
-  background: rgba(167, 139, 250, 0.12);
-  text-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
+  border-color: #A78BFA !important;
+  color: #C4B5FD !important;
+  background: rgba(167, 139, 250, 0.16) !important;
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.4) !important;
 }
 .val-0 {
-  border-color: var(--aurora);
-  color: var(--aurora);
-  background: rgba(125, 211, 252, 0.12);
-  text-shadow: 0 0 10px rgba(125, 211, 252, 0.5);
+  border-color: #38BDF8 !important;
+  color: #7DD3FC !important;
+  background: rgba(56, 189, 248, 0.16) !important;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4) !important;
 }
 .val-low {
-  border-color: var(--gn);
-  color: var(--gn);
-  background: rgba(74, 222, 128, 0.12);
-  text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+  border-color: #4ADE80 !important;
+  color: #86EFAC !important;
+  background: rgba(74, 222, 128, 0.16) !important;
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.4) !important;
 }
 .val-mid {
-  border-color: var(--yl);
-  color: var(--yl);
-  background: rgba(251, 191, 36, 0.12);
-  text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+  border-color: #FBBF24 !important;
+  color: #FDE68A !important;
+  background: rgba(251, 191, 36, 0.16) !important;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.4) !important;
 }
 .val-high {
-  border-color: var(--rd);
-  color: var(--rd);
-  background: rgba(248, 113, 113, 0.12);
-  text-shadow: 0 0 10px rgba(248, 113, 113, 0.5);
+  border-color: #F87171 !important;
+  color: #FCA5A5 !important;
+  background: rgba(248, 113, 113, 0.16) !important;
+  box-shadow: 0 0 12px rgba(248, 113, 113, 0.4) !important;
 }
 
 .pile-slot.pulse-target .card-container {
@@ -625,12 +650,20 @@ main {
 }
 .opp-grid-mini .card-container {
   width: 100%;
+  height: auto;
   aspect-ratio: 2/3;
   cursor: default;
 }
+.opp-grid-mini .card-front {
+  font-size: clamp(0.75rem, 2vw, 0.95rem) !important;
+  font-weight: 800;
+  border-width: 1.5px;
+}
 .opp-grid-mini .card-face {
-  font-size: 0.75rem;
   border-radius: 4px;
+}
+.opp-grid-mini .card-star {
+  font-size: clamp(0.6rem, 1.5vw, 0.85rem);
 }
 
 /* Large Screens & 4K */
@@ -841,7 +874,7 @@ main {
             <div class="pile-label">DECK (<span id="deck-count">--</span>)</div>
             <div class="card-container" id="deck-card-visual">
               <div class="card-inner">
-                <div class="card-face card-back"></div>
+                <div class="card-face card-back"><div class="card-star">✦</div></div>
               </div>
             </div>
           </div>
@@ -850,7 +883,7 @@ main {
             <div class="pile-label">DISCARD</div>
             <div class="card-container face-up" id="top-discard-visual">
               <div class="card-inner">
-                <div class="card-face card-back"></div>
+                <div class="card-face card-back"><div class="card-star">✦</div></div>
                 <div class="card-face card-front" id="discard-card-front">--</div>
               </div>
             </div>
@@ -865,7 +898,7 @@ main {
           <div style="display:flex; justify-content:center; gap:12px; align-items:center;">
             <div class="card-container face-up" style="cursor:default;">
               <div class="card-inner">
-                <div class="card-face card-back"></div>
+                <div class="card-face card-back"><div class="card-star">✦</div></div>
                 <div class="card-face card-front" id="drawn-card-front">--</div>
               </div>
             </div>
@@ -1170,7 +1203,7 @@ function createCardHTML(val, isVisible, onClickStr = '') {
   return `
     <div class="card-container ${isVisible ? 'face-up' : ''}" ${onClickStr ? `onclick="${onClickStr}"` : ''}>
       <div class="card-inner">
-        <div class="card-face card-back"></div>
+        <div class="card-face card-back"><div class="card-star">✦</div></div>
         <div class="card-face card-front ${colorCls}">${isVisible ? displayVal : ''}</div>
       </div>
     </div>
@@ -1282,8 +1315,10 @@ socket.on('state', (room) => {
       discardFront.className = `card-face card-front ${getCardColorClass(topDiscard)}`;
       discardFront.innerHTML = (topDiscard === 6 || topDiscard === 9) ? `<u>${topDiscard}</u>` : topDiscard;
       discardVisual.classList.remove('empty');
+      discardVisual.classList.add('face-up');
     } else {
       discardVisual.classList.add('empty');
+      discardVisual.classList.remove('face-up');
     }
 
     const drawnContainer = document.getElementById('drawn-action-container');
@@ -1306,7 +1341,9 @@ socket.on('state', (room) => {
     if (myPlayer) {
       document.getElementById('my-player-emoji').innerText = myPlayer.emoji || '🃏';
       document.getElementById('my-player-name').innerText = `${myPlayer.name} (You)`;
-      document.getElementById('my-revealed-sum').innerText = `Revealed: ${getVisibleSum(myPlayer)}`;
+      const revealedCount = myPlayer.visible ? myPlayer.visible.filter(Boolean).length : 0;
+      const runningSum = getVisibleSum(myPlayer);
+      document.getElementById('my-revealed-sum').innerHTML = `Score: <strong style="color:var(--star);">${runningSum}</strong> <span style="opacity:0.6; font-size:0.8em; margin-left:6px;">(${revealedCount}/12 revealed)</span>`;
 
       const gridEl = document.getElementById('my-grid');
       gridEl.innerHTML = myPlayer.grid.map((val, idx) => {
@@ -1332,11 +1369,13 @@ socket.on('state', (room) => {
       const p = room.players[id];
       if (!p) return '';
       const isActiveOpp = room.playerOrder[room.turnIndex] === id;
+      const oppCount = p.visible ? p.visible.filter(Boolean).length : 0;
+      const oppSum = getVisibleSum(p);
       return `
         <div class="opp-card ${isActiveOpp ? 'active-turn' : ''}">
           <div class="opp-header">
             <div class="opp-name">${p.emoji || '👤'} ${p.name}</div>
-            <div class="opp-score">Revealed: ${getVisibleSum(p)}</div>
+            <div class="opp-score">Score: <strong style="color:var(--star);">${oppSum}</strong> <span style="opacity:0.6; font-size:0.85em;">(${oppCount}/12)</span></div>
           </div>
           <div class="opp-grid-mini">
             ${p.grid.map((val, idx) => createCardHTML(val, p.visible && p.visible[idx], '')).join('')}
