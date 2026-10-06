@@ -349,6 +349,59 @@ main {
   50% { border-color: var(--rd); box-shadow: 0 0 25px rgba(248, 113, 113, 0.3); }
 }
 
+/* Pause Alert & Rejoin Modal Items */
+.pause-banner-box {
+  background: rgba(45, 20, 10, 0.95);
+  border: 1px solid var(--yl);
+  box-shadow: 0 0 25px rgba(251, 191, 36, 0.2);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  animation: pulseBanner 2s infinite;
+}
+
+.room-item-card {
+  background: rgba(5, 7, 14, 0.7);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.room-item-card:hover {
+  border-color: var(--aurora);
+  background: rgba(14, 28, 48, 0.8);
+  transform: translateY(-1px);
+}
+
+.player-item-card {
+  background: rgba(5, 7, 14, 0.7);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+.player-item-card.clickable {
+  cursor: pointer;
+  border-color: rgba(251, 191, 36, 0.4);
+}
+.player-item-card.clickable:hover {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: var(--yl);
+  transform: scale(1.01);
+}
+
 .guide-step-title {
   font-size: 0.95rem;
   font-weight: 800;
@@ -805,6 +858,12 @@ main {
     </div>
 
     <button class="btn-secondary" onclick="joinRoom()">Join Room</button>
+
+    <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--bd);">
+      <button class="btn-secondary" onclick="showAvailableRooms()" style="color: var(--star); border-color: rgba(245, 230, 200, 0.35);">
+        🔄 Rejoin Active Room
+      </button>
+    </div>
   </div>
 
   <!-- WAITING ROOM (BEFORE START) -->
@@ -850,6 +909,21 @@ main {
 
   <!-- ACTIVE GAME SCREEN -->
   <div id="game-view" class="hidden">
+    <!-- Live Disconnection Pause Alert Banner -->
+    <div id="pause-alert" class="pause-banner-box hidden">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:1.4rem;">⏸️</span>
+        <div>
+          <div style="font-weight:800; color:var(--yl); font-size:0.92rem;" id="pause-title">GAME PAUSED</div>
+          <div style="color:var(--fg); opacity:0.85; font-size:0.8rem; margin-top:2px;" id="pause-desc">Waiting for disconnected player...</div>
+        </div>
+      </div>
+      <div id="pause-host-actions" class="hidden" style="display:flex; gap:8px;">
+        <button class="btn-secondary" style="padding:6px 14px; font-size:0.8rem; border-color:var(--aurora); color:var(--aurora);" id="extend-buffer-btn">+60s Buffer</button>
+        <button class="btn-secondary" style="padding:6px 14px; font-size:0.8rem; color:var(--rd); border-color:rgba(248,113,113,0.5);" id="kick-player-btn">Kick Player</button>
+      </div>
+    </div>
+
     <!-- Turn Guidance Banner -->
     <div class="turn-guide-banner" id="turn-guide-banner">
       <div>
@@ -1018,6 +1092,32 @@ main {
   </div>
 </div>
 
+<!-- Available Rooms Modal -->
+<div id="available-rooms-modal" class="modal-overlay hidden" onclick="closeModal('available-rooms-modal')">
+  <div class="modal-card" style="max-width:480px; width:92%;" onclick="event.stopPropagation()">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+      <h3 style="color:var(--star); font-size:1.15rem; font-weight:800;">🔄 Active Party Jo Rooms</h3>
+      <button class="btn-icon" onclick="closeModal('available-rooms-modal')">✕</button>
+    </div>
+    <p style="color:var(--mt); font-size:0.8rem; margin-bottom:1rem; text-align:left;">Select a room to view players and reconnect to your session.</p>
+    <div id="rooms-list" style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
+    <button class="btn-secondary" style="margin-top:1rem;" onclick="closeModal('available-rooms-modal')">Close</button>
+  </div>
+</div>
+
+<!-- Select Player Modal -->
+<div id="select-player-modal" class="modal-overlay hidden" onclick="closeModal('select-player-modal')">
+  <div class="modal-card" style="max-width:480px; width:92%;" onclick="event.stopPropagation()">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+      <h3 id="room-select-title" style="color:var(--star); font-size:1.15rem; font-weight:800;">Party Jo Room</h3>
+      <button class="btn-icon" onclick="closeModal('select-player-modal')">✕</button>
+    </div>
+    <p style="color:var(--mt); font-size:0.8rem; margin-bottom:1rem; text-align:left;">Click your inactive name below to reclaim your cards & rejoin.</p>
+    <div id="players-list" style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
+    <button class="btn-secondary" style="margin-top:1rem;" onclick="closeModal('select-player-modal'); showAvailableRooms();">← Back to Rooms</button>
+  </div>
+</div>
+
 <!-- Socket.io -->
 <script src="/socket.io/socket.io.js"></script>
 
@@ -1179,6 +1279,82 @@ function nextRound() {
   socket.emit('next_round', currentCode);
 }
 
+let pauseInterval = null;
+
+function formatTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return (m > 0 ? m + 'm ' : '') + s + 's';
+}
+
+function showAvailableRooms() {
+  socket.emit('get_available_rooms');
+}
+
+function selectRoom(code) {
+  socket.emit('get_room_players', code);
+}
+
+function selectPlayer(playerId, name, code) {
+  closeModal('select-player-modal');
+  unlockMobileAudio();
+  currentCode = code;
+  sessionStorage.setItem('polaris_pj_name', name);
+  sessionStorage.setItem('polaris_pj_code', code);
+  socket.emit('join_room', { code, name, emoji: selectedEmoji });
+}
+
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.add('hidden');
+}
+
+socket.on('available_rooms', (rooms) => {
+  const list = document.getElementById('rooms-list');
+  if (!rooms || !rooms.length) {
+    list.innerHTML = `<div style="color:var(--mt); font-size:0.85rem; padding:1.5rem; text-align:center;">No active game rooms found.</div>`;
+  } else {
+    list.innerHTML = rooms.map(r => `
+      <div class="room-item-card" onclick="selectRoom('${r.code}')">
+        <div>
+          <strong style="color:var(--fg); font-size:0.95rem;">${r.roomName || 'Party Jo'}</strong>
+          <div style="color:var(--mt); font-size:0.75rem; margin-top:2px;">Code: <span style="font-family:monospace; color:var(--star);">${r.code}</span> • ${r.playerCount} Players</div>
+        </div>
+        <span class="room-code-tag" style="font-size:0.75rem;">${r.status}</span>
+      </div>
+    `).join('');
+  }
+  document.getElementById('available-rooms-modal').classList.remove('hidden');
+});
+
+socket.on('room_players', (room) => {
+  if (!room) return;
+  document.getElementById('available-rooms-modal').classList.add('hidden');
+  document.getElementById('room-select-title').innerText = `${room.roomName || 'Party Jo'} (Room ${room.code})`;
+  const list = document.getElementById('players-list');
+  list.innerHTML = room.players.map(p => {
+    let statusClass = 'color:var(--gn); border-color:rgba(74,222,128,0.4);', statusTxt = 'ACTIVE', clickable = false;
+    if (p.kicked_pending) {
+      statusClass = 'color:var(--rd); border-color:rgba(248,113,113,0.4);';
+      statusTxt = 'KICKED';
+    } else if (p.disconnected) {
+      statusClass = 'color:var(--yl); border-color:rgba(251,191,36,0.5); background:rgba(251,191,36,0.12);';
+      statusTxt = 'INACTIVE (CLICK TO REJOIN)';
+      clickable = true;
+    }
+    return `
+      <div class="player-item-card ${clickable ? 'clickable' : ''}" onclick="${clickable ? `selectPlayer('${p.id}', '${p.name}', '${room.code}')` : ''}">
+        <div>
+          <strong style="color:var(--fg); font-size:0.9rem;">${p.emoji || '👤'} ${p.name}</strong>
+          <div style="color:var(--mt); font-size:0.75rem;">Total Score: ${p.score || 0}</div>
+        </div>
+        <span class="room-code-tag" style="${statusClass} font-size:0.75rem;">${statusTxt}</span>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('select-player-modal').classList.remove('hidden');
+});
+
 function action(type, index = null) {
   if (!currentCode) return;
   sound.play('flip');
@@ -1272,6 +1448,37 @@ socket.on('state', (room) => {
     banner.classList.toggle('my-turn', isMyTurn);
     banner.classList.toggle('last-turn', room.gamePhase === 'LAST_TURN');
     document.getElementById('round-target-badge').innerText = `Target: ${room.settings?.targetScore || 100}`;
+
+    // Disconnection Auto-Pause Banner & Buffer Countdown Ticker
+    const pauseAlert = document.getElementById('pause-alert');
+    if (pauseInterval) { clearInterval(pauseInterval); pauseInterval = null; }
+
+    if (room.pausedBy && room.players[room.pausedBy.playerId]) {
+      const pausedPlayer = room.players[room.pausedBy.playerId];
+      const updatePauseTicker = () => {
+        const elapsed = Date.now() - (pausedPlayer.disconnectTime || Date.now());
+        const totalBuffer = (room.settings?.bufferTimeSec || 120) * 1000;
+        const remainingSec = Math.max(0, Math.ceil((totalBuffer - elapsed) / 1000));
+        document.getElementById('pause-title').innerText = `⏸️ GAME PAUSED — Waiting for ${pausedPlayer.emoji || '👤'} ${pausedPlayer.name}`;
+        document.getElementById('pause-desc').innerText = `Buffer timeout remaining: ${formatTime(remainingSec)}. Game resumes automatically once reconnected.`;
+      };
+      updatePauseTicker();
+      pauseInterval = setInterval(updatePauseTicker, 1000);
+
+      const hostActions = document.getElementById('pause-host-actions');
+      hostActions.classList.toggle('hidden', !isHost);
+      if (isHost) {
+        document.getElementById('extend-buffer-btn').onclick = () => {
+          socket.emit('extend_buffer', { code: room.code, playerId: room.pausedBy.playerId, additionalSec: 60 });
+        };
+        document.getElementById('kick-player-btn').onclick = () => {
+          socket.emit('kick_player', { code: room.code, playerId: room.pausedBy.playerId });
+        };
+      }
+      pauseAlert.classList.remove('hidden');
+    } else {
+      pauseAlert.classList.add('hidden');
+    }
 
     if (room.gamePhase === 'SETUP') {
       const flipsDone = myPlayer?.visible?.filter(Boolean).length || 0;

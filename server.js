@@ -240,7 +240,21 @@ tbNsp.on('connection', (socket) => {
     socket.on('join_room', ({ code, name }) => {
         if (!name || !code) return socket.emit('error', 'Invalid');
         name = name.trim();
-        const room = tambola.joinRoom(code, socket.id, name);
+        let room = tambola.getRoom(code);
+        if (!room) return socket.emit('error', 'Cannot join: Room not found');
+
+        if (room.gamePhase !== 'LOBBY') {
+            if (tambola.reconnectPlayer(room, socket.id, name)) {
+                socket.join(code);
+                currentRoom = code;
+                tbNsp.to(code).emit('announcement', `🔄 ${name} reconnected!`);
+                tbNsp.to(code).emit('state', room);
+                return;
+            }
+            return socket.emit('error', 'Game in progress. Only existing players can rejoin.');
+        }
+
+        room = tambola.joinRoom(code, socket.id, name);
         if (!room) return socket.emit('error', 'Cannot join');
         socket.join(code);
         currentRoom = code;
@@ -249,6 +263,7 @@ tbNsp.on('connection', (socket) => {
     });
 
     socket.on('get_available_rooms', () => socket.emit('available_rooms', tambola.getAvailableRooms()));
+    socket.on('get_room_players', (code) => socket.emit('room_players', tambola.getRoomPlayersByCode(code)));
 
     socket.on('start_game', (code) => {
         const room = tambola.getRoom(code);

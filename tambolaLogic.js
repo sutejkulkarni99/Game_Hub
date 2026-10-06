@@ -285,6 +285,27 @@ module.exports = {
         return null;
     },
 
+    getRoomPlayersByCode: (code) => {
+        const room = rooms[code];
+        if (!room) return null;
+        return {
+            code: room.code,
+            roomName: `Tambola Room ${room.code}`,
+            status: room.gamePhase,
+            players: Object.keys(room.players).map(id => {
+                const p = room.players[id];
+                return {
+                    id,
+                    name: p.name,
+                    status: p.status,
+                    disconnected: p.disconnected,
+                    score: p.claimedPatterns ? p.claimedPatterns.length : 0,
+                    kicked_pending: false
+                };
+            })
+        };
+    },
+
     checkWinners,
 
     claimPattern: (room, playerId, pattern) => {
